@@ -9,6 +9,7 @@ dependencies = [
     "flask-sqlalchemy>=3.1.1",
     "gunicorn>=23.0.0",
     "openai>=1.77.0",
+    "pathspec>=0.12.1",
     "psycopg2-binary>=2.9.10",
     "tomli>=2.2.1",
     "trafilatura>=2.0.0",

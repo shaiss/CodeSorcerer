@@ -7,10 +7,12 @@ yielding file paths and contents.
 
 import logging
 import os
+import stat
 from pathlib import Path
-from typing import Dict, Generator, List, Set, Tuple
+from typing import Dict, Generator, List, Set, Tuple, Optional
 
 from audit_near.providers.base_provider import BaseProvider
+from audit_near.providers.gitignore_handler import GitIgnoreHandler
 
 
 class RepoProvider(BaseProvider):
@@ -35,6 +37,9 @@ class RepoProvider(BaseProvider):
         
         if not os.path.isdir(self.repo_path):
             raise ValueError(f"Repository path does not exist: {self.repo_path}")
+        
+        # Initialize GitIgnore handler
+        self.gitignore_handler = GitIgnoreHandler(self.repo_path)
             
         self.logger.info(f"Initialized repository provider for {self.repo_path}")
 
@@ -48,27 +53,65 @@ class RepoProvider(BaseProvider):
         Returns:
             True if the path should be excluded, False otherwise
         """
-        excluded_dirs = {".git", "node_modules", "__pycache__", ".idea", ".vscode", ".venv", "venv", "env", "build", "dist"}
-        excluded_files = {".DS_Store", ".gitignore", ".gitattributes"}
-        excluded_extensions = {".pyc", ".pyo", ".so", ".o", ".a", ".lib", ".dll", ".exe", ".bin", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".ico", ".mp3", ".mp4", ".wav", ".avi", ".mov", ".pdf"}
-
-        path_parts = Path(path).parts
+        # First check if the file is ignored by gitignore patterns
+        rel_path = os.path.relpath(path, self.repo_path)
+        if self.gitignore_handler.is_ignored(rel_path):
+            return True
         
-        # Check if any part of the path is in excluded_dirs
-        if any(part in excluded_dirs for part in path_parts):
-            return True
-            
-        # Check if filename is in excluded_files
-        if os.path.basename(path) in excluded_files:
-            return True
-            
-        # Check if extension is in excluded_extensions
+        # Additional exclusions that might not be in .gitignore
+        excluded_extensions = {
+            # Binary files that shouldn't be analyzed
+            ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".ico", ".svg",
+            ".mp3", ".mp4", ".wav", ".avi", ".mov", ".flac", ".ogg",
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+            ".zip", ".tar", ".gz", ".rar", ".7z",
+            ".ttf", ".otf", ".woff", ".woff2", ".eot",
+            ".db", ".sqlite", ".sqlite3", ".db3",
+            ".exe", ".dll", ".so", ".dylib", ".bin", ".o", ".a", ".lib"
+        }
+        
+        # Check if extension is in excluded_extensions (additional binary files)
         if os.path.splitext(path)[1].lower() in excluded_extensions:
             return True
             
         return False
 
-    def _get_file_content(self, file_path: str) -> str:
+    def _is_binary_file(self, file_path: str) -> bool:
+        """
+        Check if a file is binary.
+        
+        Args:
+            file_path: Path to the file
+            
+        Returns:
+            True if the file is binary, False otherwise
+        """
+        # Check file extension
+        _, ext = os.path.splitext(file_path)
+        if ext.lower() in {
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico',
+            '.pdf', '.zip', '.tar', '.gz', '.exe', '.dll', '.so',
+            '.pyc', '.pyo', '.o', '.a', '.lib', '.bin',
+            '.mp3', '.mp4', '.wav', '.avi', '.mov',
+        }:
+            return True
+            
+        # Check first few bytes for null bytes (common in binary files)
+        try:
+            with open(file_path, 'rb') as f:
+                chunk = f.read(1024)
+                if b'\x00' in chunk:
+                    return True
+                # Additional check for UTF-16 BOM
+                if chunk.startswith(b'\xff\xfe') or chunk.startswith(b'\xfe\xff'):
+                    return False  # It's a text file, just UTF-16 encoded
+        except Exception:
+            # If we can't read the file, treat it as binary
+            return True
+            
+        return False
+
+    def _get_file_content(self, file_path: str) -> Optional[str]:
         """
         Get the content of a file.
         
@@ -76,17 +119,37 @@ class RepoProvider(BaseProvider):
             file_path: Path to the file
             
         Returns:
-            Content of the file as a string
-            
-        Raises:
-            ValueError: If the file cannot be read
+            Content of the file as a string, or None if file is binary
         """
+        # Skip files that are too large
         try:
+            file_size = os.path.getsize(file_path)
+            if file_size > 1024 * 1024:  # Skip files > 1MB
+                self.logger.debug(f"Skipping large file {file_path} ({file_size} bytes)")
+                return None
+                
+            # Skip files that are symlinks
+            if os.path.islink(file_path):
+                self.logger.debug(f"Skipping symlink {file_path}")
+                return None
+                
+            # Skip files that are executable
+            mode = os.stat(file_path).st_mode
+            if mode & stat.S_IEXEC:
+                self.logger.debug(f"Skipping executable file {file_path}")
+                return None
+                
+            # Check if file is binary
+            if self._is_binary_file(file_path):
+                self.logger.debug(f"Skipping binary file {file_path}")
+                return None
+                
+            # Read text content
             with open(file_path, "r", encoding="utf-8", errors="replace") as f:
                 return f.read()
         except Exception as e:
             self.logger.warning(f"Could not read file {file_path}: {e}")
-            return ""  # Return empty string for binary or unreadable files
+            return None
 
     def get_files(self) -> Generator[Tuple[str, str], None, None]:
         """
@@ -115,5 +178,9 @@ class RepoProvider(BaseProvider):
                 
                 # Get file content
                 content = self._get_file_content(file_path)
+                
+                # Skip if content is None (binary file)
+                if content is None:
+                    continue
                 
                 yield rel_path, content
