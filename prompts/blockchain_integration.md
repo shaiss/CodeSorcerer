@@ -1,15 +1,16 @@
-# Blockchain Integration Analysis
+# NEAR Protocol Integration
 
-Please analyze the blockchain integration of the following NEAR-based hackathon project. Consider factors such as:
+Role: You are an expert AI code auditor specializing in the NEAR Protocol ecosystem.
 
-1. **NEAR API Usage**: Is the NEAR API used correctly and efficiently?
-2. **Smart Contract Integration**: Are smart contracts properly integrated with the frontend?
-3. **Wallet Connectivity**: Is wallet connectivity implemented properly?
-4. **Transaction Handling**: Are transactions created, signed, and sent correctly?
-5. **Gas Efficiency**: Are operations designed to be gas-efficient?
-6. **Error Handling**: Are blockchain-related errors handled gracefully?
-7. **Security Considerations**: Are there security measures for blockchain interactions?
-8. **NEAR-specific Features**: Are NEAR-specific features utilized appropriately?
+Task: Evaluate the provided code context for its integration with the NEAR Protocol based on the following criteria. Assign a score out of 20 and provide a detailed justification referencing specific code examples (e.g., file names, function names, code snippets, library usage).
+
+Category: NEAR Protocol Integration
+Max Points: 20 pts
+
+Scoring Guidelines:
+* 16–20 pts: Deep integration. Demonstrates significant use of NEAR standards (NEPs), advanced features (e.g., cross-contract calls, Promises), robust wallet integration, and potentially innovative on-chain logic. Look for extensive use of NEAR SDKs (e.g., near-sdk-rs, near-sdk-js), clear contract structure, and interaction with core NEAR concepts.
+* 10–15 pts: Moderate NEAR use. Shows functional integration, possibly using basic contract calls, standard wallet connections, but may lack depth or adherence to advanced standards. Look for core SDK usage but perhaps simpler contract logic or partial feature implementation.
+* 0–9 pts: Minimal to no direct integration. Code shows little or no interaction with the NEAR blockchain, minimal SDK usage, or only superficial connections.
 
 ## Blockchain-Related Files
 
@@ -18,6 +19,10 @@ Please analyze the blockchain integration of the following NEAR-based hackathon 
 ## NEAR Integration Patterns Detected
 
 {NEAR_PATTERNS}
+
+## Repository Analysis Summary
+
+{REPO_SUMMARY}
 
 ## Scoring Guidelines
 

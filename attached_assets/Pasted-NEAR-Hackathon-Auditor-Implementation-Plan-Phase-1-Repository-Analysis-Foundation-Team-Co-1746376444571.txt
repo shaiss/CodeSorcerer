@@ -1,0 +1,48 @@
+NEAR Hackathon Auditor: Implementation Plan
+
+Phase 1: Repository Analysis Foundation
+
+**Team: Core Infrastructure**
+
+1. **GitIgnore Implementation**
+    - Develop parser for .gitignore files
+    - Implement pattern matching for exclusions
+    - Create filtering system for repository traversal
+    - Add tests to verify proper filtering
+2. **Core File Organization**
+    - Categorize files by language and purpose
+    - Create normalized representation of file structure
+    - Implement file content extraction with character encoding handling
+    - Build metrics collection for repository overview stats
+
+Phase 2: Smart Context Generation
+
+**Team: Intelligence Layer**
+
+1. **Language-Specific File Selection**
+    - Create selectors for common languages (JavaScript/TypeScript, Python, Rust)
+    - Implement heuristics to identify important files per language
+    - Build scoring system to rank file relevance by category
+    - Add file size and complexity metrics
+2. **Dependency Graph Construction**
+    - Implement import/require statement analyzers
+    - Build directed graph of file dependencies
+    - Calculate centrality measures to identify core components
+    - Generate visual representation of dependency structure
+3. **Boilerplate & SDK Detection**
+    - Build fingerprinting system for common libraries and SDKs
+    - Implement summary extraction for third-party code usage
+    - Build exclusion system for standard libraries
+    - Add detection for common patterns indicating sample or template code
+    - Flag and filter out boilerplate and third-party libraries
+    - Detect and categorize standard libraries and SDKs (like NEAR SDK)
+    - Focus analysis on how the project uses external libraries rather than analyzing the libraries themselves
+    - Create summaries of library usage patterns to provide context without bloating the prompt
+4. Leverage Git Metadata for Project Maturity Assessment
+Extract commit history and patterns to evaluate "Team Activity & Project Maturity"
+Analyze commit frequency, contributor count, and time span of project development
+Look for evidence of ongoing development through release tags, branches, etc.
+5. Implement Standardized Prompts Based on New Rubric
+Use the enriched prompts provided in the JSON for each category
+Structure the prompts to guide the LLM toward specific evaluation criteria
+Include the scoring guidelines directly in the prompts
