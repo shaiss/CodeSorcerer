@@ -1,0 +1,45 @@
+# NEAR Hackathon Audit Configuration
+
+[general]
+name = "NEAR Hackathon Auditor"
+version = "0.1.0"
+description = "Audit tool for NEAR hackathon projects"
+
+[categories.code_quality]
+name = "Code Quality"
+max_points = 10
+description = "Evaluates code structure, readability, maintainability, and adherence to best practices"
+
+[categories.functionality]
+name = "Functionality"
+max_points = 10
+description = "Assesses feature completeness, correctness, and robustness"
+
+[categories.security]
+name = "Security"
+max_points = 10
+description = "Evaluates security practices, vulnerability prevention, and data protection"
+
+[categories.innovation]
+name = "Innovation"
+max_points = 10
+description = "Measures originality, creativity, and novel use of blockchain technology"
+
+[categories.documentation]
+name = "Documentation"
+max_points = 10
+description = "Assesses comprehensiveness, clarity, and helpfulness of documentation"
+
+[categories.ux_design]
+name = "UX Design"
+max_points = 10
+description = "Evaluates usability, accessibility, and overall user experience"
+
+[categories.blockchain_integration]
+name = "Blockchain Integration"
+max_points = 10
+description = "Assesses proper integration with NEAR blockchain and related technologies"
+
+[ai]
+primary_model = "gpt-4o"
+nano_model = "gpt-4o"

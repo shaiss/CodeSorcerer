@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Start New Audit - NEAR Hackathon Auditor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2>Start New Audit</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('audit') }}">
+                    <div class="mb-3">
+                        <label for="repo_path" class="form-label">Repository Path</label>
+                        <input type="text" class="form-control" id="repo_path" name="repo_path" 
+                               placeholder="e.g., /path/to/repository" required>
+                        <div class="form-text">The absolute path to a local repository to audit</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="branch" class="form-label">Branch</label>
+                        <input type="text" class="form-control" id="branch" name="branch" 
+                               value="main" placeholder="e.g., main, master, develop">
+                        <div class="form-text">The branch to audit (usually 'main' or 'master')</div>
+                    </div>
+                    
+                    <div class="form-text mb-3">
+                        <div class="alert alert-info">
+                            <strong>Important:</strong> The audit process may take several minutes depending on the repository size.
+                            This tool requires an OpenAI API key set in the environment variables.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Start Audit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3>Audit Process</h3>
+            </div>
+            <div class="card-body">
+                <p>The audit tool will analyze the repository across 7 categories:</p>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item">Code Quality (10 points)</li>
+                    <li class="list-group-item">Functionality (10 points)</li>
+                    <li class="list-group-item">Security (10 points)</li>
+                    <li class="list-group-item">Innovation (10 points)</li>
+                    <li class="list-group-item">Documentation (10 points)</li>
+                    <li class="list-group-item">UX Design (10 points)</li>
+                    <li class="list-group-item">Blockchain Integration (10 points)</li>
+                </ul>
+                <p>Each category is scored from 0-10 based on specific criteria, with detailed feedback provided.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

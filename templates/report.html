@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Report - {{ report.repo_name }} - NEAR Hackathon Auditor{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2>Audit Report: {{ report.repo_name }}</h2>
+        <a href="{{ url_for('download_report', report_id=report.id) }}" class="btn btn-secondary">
+            Download Report
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <p><strong>Repository:</strong> {{ report.repo_path }}</p>
+                <p><strong>Branch:</strong> {{ report.branch }}</p>
+                <p><strong>Date:</strong> {{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+            <div class="col-md-6">
+                <div class="text-center p-3 border rounded bg-dark">
+                    <h3>Overall Score</h3>
+                    <div class="score-display">
+                        {{ "%.1f"|format(report.total_score) }} / {{ report.total_possible }}
+                    </div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar 
+                            {% if percentage >= 80 %}bg-success
+                            {% elif percentage >= 60 %}bg-info
+                            {% elif percentage >= 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ percentage }}%"
+                            aria-valuenow="{{ percentage }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ "%.1f"|format(percentage) }}%
+                        </div>
+                    </div>
+                    <p class="mt-2">
+                        {% if percentage >= 90 %}Excellent
+                        {% elif percentage >= 80 %}Very Good
+                        {% elif percentage >= 70 %}Good
+                        {% elif percentage >= 60 %}Satisfactory
+                        {% elif percentage >= 50 %}Needs Improvement
+                        {% else %}Poor{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <h3 class="mb-3">Category Scores</h3>
+        <div class="accordion" id="categoryAccordion">
+            {% for category, data in results.items() %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ loop.index }}">
+                        <button class="accordion-button {% if loop.index > 1 %}collapsed{% endif %}" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapse{{ loop.index }}" 
+                                aria-expanded="{{ 'true' if loop.index == 1 else 'false' }}" 
+                                aria-controls="collapse{{ loop.index }}">
+                            <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                <span>{{ category|replace('_', ' ')|title }}</span>
+                                <span class="badge 
+                                    {% if data.score / data.max_points >= 0.8 %}bg-success
+                                    {% elif data.score / data.max_points >= 0.6 %}bg-info
+                                    {% elif data.score / data.max_points >= 0.4 %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ data.score }} / {{ data.max_points }}
+                                </span>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ loop.index }}" 
+                         class="accordion-collapse collapse {% if loop.index == 1 %}show{% endif %}" 
+                         aria-labelledby="heading{{ loop.index }}" 
+                         data-bs-parent="#categoryAccordion">
+                        <div class="accordion-body">
+                            <div class="feedback-section">{{ data.feedback }}</div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between">
+    <a href="{{ url_for('audit') }}" class="btn btn-primary">Start New Audit</a>
+    <a href="{{ url_for('list_reports') }}" class="btn btn-secondary">All Reports</a>
+</div>
+{% endblock %}

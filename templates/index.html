@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}NEAR Hackathon Auditor - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h1 class="card-title">Welcome to NEAR Hackathon Auditor</h1>
+                <p class="card-text">
+                    This tool performs comprehensive audits of NEAR-based hackathon projects, 
+                    evaluating code quality, security, functionality, innovation, documentation, 
+                    UX design, and blockchain integration.
+                </p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                    <a href="{{ url_for('audit') }}" class="btn btn-primary">Start New Audit</a>
+                    <a href="{{ url_for('list_reports') }}" class="btn btn-secondary">View Reports</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>How It Works</h3>
+            </div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered mb-3">
+                    <li class="list-group-item">Provide a path to a local NEAR-based project repository</li>
+                    <li class="list-group-item">The tool analyzes the codebase across 7 key categories</li>
+                    <li class="list-group-item">Advanced AI evaluates each category using specialized criteria</li>
+                    <li class="list-group-item">A comprehensive report is generated with scores and feedback</li>
+                </ol>
+                <h4>Categories Evaluated:</h4>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card category-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Code Quality</h5>
+                                <p class="card-text">Structure, readability, maintainability</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card category-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Functionality</h5>
+                                <p class="card-text">Feature completeness and correctness</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card category-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Security</h5>
+                                <p class="card-text">Vulnerability prevention, data protection</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card category-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Innovation</h5>
+                                <p class="card-text">Originality, creativity, novel solutions</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card category-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Documentation</h5>
+                                <p class="card-text">Clarity, comprehensiveness, examples</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card category-card">
+                            <div class="card-body">
+                                <h5 class="card-title">UX Design</h5>
+                                <p class="card-text">Usability, accessibility, visual design</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card category-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Blockchain Integration</h5>
+                                <p class="card-text">NEAR API usage, smart contract integration</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Audits</h3>
+            </div>
+            <div class="card-body">
+                {% if recent_audits %}
+                    <div class="list-group">
+                        {% for report in recent_audits %}
+                            <a href="{{ url_for('view_report', report_id=report.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ report.repo_name }}</h5>
+                                    <small>{{ report.created_at.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <p class="mb-1">{{ report.branch }}</p>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ "%.1f"|format(report.total_score) }}/{{ report.total_possible }}
+                                    </span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-center text-muted">No audits performed yet</p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('audit') }}" class="btn btn-primary">Start Your First Audit</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
