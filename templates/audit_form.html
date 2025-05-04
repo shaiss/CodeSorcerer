@@ -2,6 +2,25 @@
 
 {% block title %}Start New Audit - NEAR Hackathon Auditor{% endblock %}
 
+{% block extra_head %}
+<style>
+    .validation-results {
+        display: none;
+        margin-top: 1rem;
+    }
+    .file-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .directory-item {
+        cursor: pointer;
+    }
+    .directory-item:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
@@ -13,10 +32,29 @@
                 <form method="post" action="{{ url_for('audit') }}">
                     <div class="mb-3">
                         <label for="repo_path" class="form-label">Repository Path</label>
-                        <input type="text" class="form-control" id="repo_path" name="repo_path" 
-                               placeholder="e.g., /path/to/repository" required>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="repo_path" name="repo_path" 
+                                   placeholder="e.g., /path/to/repository" required>
+                            <button class="btn btn-outline-secondary" type="button" 
+                                    data-bs-toggle="modal" data-bs-target="#fileExplorerModal">
+                                Browse
+                            </button>
+                        </div>
                         <div class="form-text">The absolute path to a local repository to audit</div>
                     </div>
+                    
+                    {% if sample_repos %}
+                    <div class="mb-3">
+                        <label for="sample_repo" class="form-label">Sample Repositories</label>
+                        <select class="form-select" id="sample_repo" onchange="selectSampleRepo()">
+                            <option value="" selected>-- Select a sample repository --</option>
+                            {% for repo in sample_repos %}
+                            <option value="{{ repo }}">{{ repo }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">You can select from these pre-configured test repositories</div>
+                    </div>
+                    {% endif %}
                     
                     <div class="mb-3">
                         <label for="branch" class="form-label">Branch</label>
@@ -32,7 +70,8 @@
                         </div>
                     </div>
                     
-                    <div class="d-grid">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" id="validateBtn" class="btn btn-outline-secondary me-2" onclick="validateRepository()">Validate Repository</button>
                         <button type="submit" class="btn btn-primary">Start Audit</button>
                     </div>
                 </form>
@@ -57,6 +96,256 @@
                 <p>Each category is scored from 0-10 based on specific criteria, with detailed feedback provided.</p>
             </div>
         </div>
+        
+        <!-- Validation Results Card -->
+        <div id="validationResults" class="card mt-4 validation-results">
+            <div class="card-header">
+                <h3>Repository Validation</h3>
+            </div>
+            <div class="card-body">
+                <div id="validationSpinner" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Validating repository...</p>
+                </div>
+                <div id="validationContent" style="display: none;">
+                    <div id="validationStatus" class="alert mb-3"></div>
+                    
+                    <h4>Repository Statistics</h4>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Total Files:</th>
+                            <td id="totalFiles">-</td>
+                            <th>Code Files:</th>
+                            <td id="codeFiles">-</td>
+                        </tr>
+                        <tr>
+                            <th>Doc Files:</th>
+                            <td id="docFiles">-</td>
+                            <th>Other Files:</th>
+                            <td id="otherFiles">-</td>
+                        </tr>
+                    </table>
+                    
+                    <h4>Top File Types</h4>
+                    <div id="fileTypes"></div>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-primary" type="button" onclick="viewDirectoryStructure()">
+                            View Directory Structure
+                        </button>
+                        <a id="debugRepoBtn" href="/debug-repository" class="btn btn-sm btn-outline-secondary ms-2">
+                            Detailed Debug Info
+                        </a>
+                    </div>
+                    
+                    <div id="directoryStructure" class="mt-3" style="display: none;">
+                        <h4>Directory Structure</h4>
+                        <div id="dirList" class="list-group file-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- File Explorer Modal -->
+<div class="modal fade" id="fileExplorerModal" tabindex="-1" aria-labelledby="fileExplorerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fileExplorerModalLabel">Select Repository Directory</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="currentPath" class="mb-2 p-2 bg-light">
+                    <code id="currentPathText">/</code>
+                </div>
+                <div id="fileList" class="list-group file-list">
+                    <!-- Directory list will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="selectCurrentDir()">Select This Directory</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Sample repository selection
+    function selectSampleRepo() {
+        const select = document.getElementById('sample_repo');
+        const repoPath = document.getElementById('repo_path');
+        
+        if (select.value) {
+            repoPath.value = select.value;
+            // Auto-validate when selecting a sample repo
+            validateRepository();
+        }
+    }
+    
+    // Repository validation
+    function validateRepository() {
+        const repoPath = document.getElementById('repo_path').value;
+        
+        if (!repoPath) {
+            alert('Please enter a repository path');
+            return;
+        }
+        
+        // Show validation results area and spinner
+        document.getElementById('validationResults').style.display = 'block';
+        document.getElementById('validationSpinner').style.display = 'block';
+        document.getElementById('validationContent').style.display = 'none';
+        
+        // Make an AJAX call to validate the repository
+        fetch('/validate-repository?path=' + encodeURIComponent(repoPath))
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('validationSpinner').style.display = 'none';
+                document.getElementById('validationContent').style.display = 'block';
+                
+                if (data.valid) {
+                    document.getElementById('validationStatus').className = 'alert alert-success mb-3';
+                    document.getElementById('validationStatus').innerHTML = 
+                        '<strong>Success!</strong> ' + data.message;
+                    
+                    // Populate stats
+                    document.getElementById('totalFiles').textContent = data.stats.total_files;
+                    document.getElementById('codeFiles').textContent = data.stats.code_files;
+                    document.getElementById('docFiles').textContent = data.stats.doc_files;
+                    document.getElementById('otherFiles').textContent = data.stats.other_files;
+                    
+                    // Populate file types
+                    const fileTypesDiv = document.getElementById('fileTypes');
+                    fileTypesDiv.innerHTML = '';
+                    
+                    Object.entries(data.stats.file_types).forEach(([ext, count]) => {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-primary me-1 mb-1';
+                        badge.textContent = `${ext} (${count})`;
+                        fileTypesDiv.appendChild(badge);
+                    });
+                    
+                    // Update debug repo button
+                    document.getElementById('debugRepoBtn').href = '/debug-repository';
+                } else {
+                    document.getElementById('validationStatus').className = 'alert alert-danger mb-3';
+                    document.getElementById('validationStatus').innerHTML = 
+                        '<strong>Error:</strong> ' + data.message;
+                }
+            })
+            .catch(error => {
+                document.getElementById('validationSpinner').style.display = 'none';
+                document.getElementById('validationContent').style.display = 'block';
+                document.getElementById('validationStatus').className = 'alert alert-danger mb-3';
+                document.getElementById('validationStatus').innerHTML = 
+                    '<strong>Error:</strong> Failed to validate repository: ' + error;
+            });
+    }
+    
+    // Display directory structure
+    function viewDirectoryStructure() {
+        const dirStructure = document.getElementById('directoryStructure');
+        const dirList = document.getElementById('dirList');
+        const repoPath = document.getElementById('repo_path').value;
+        
+        if (dirStructure.style.display === 'none') {
+            dirStructure.style.display = 'block';
+            
+            // Make AJAX call to get directory structure
+            fetch('/repository-structure?path=' + encodeURIComponent(repoPath))
+                .then(response => response.json())
+                .then(data => {
+                    dirList.innerHTML = '';
+                    
+                    if (data.directories && data.directories.length > 0) {
+                        data.directories.forEach(dir => {
+                            const item = document.createElement('div');
+                            item.className = 'list-group-item directory-item';
+                            item.innerHTML = `<i class="bi bi-folder-fill me-2"></i>${dir}`;
+                            dirList.appendChild(item);
+                        });
+                    } else {
+                        dirList.innerHTML = '<div class="list-group-item">No directories found</div>';
+                    }
+                })
+                .catch(error => {
+                    dirList.innerHTML = `<div class="list-group-item text-danger">
+                        Error loading directory structure: ${error}
+                    </div>`;
+                });
+        } else {
+            dirStructure.style.display = 'none';
+        }
+    }
+    
+    // File explorer functionality
+    let currentDirectory = '/';
+    
+    function updateFileList(directory) {
+        // Make AJAX call to get directory contents
+        fetch('/directory-contents?path=' + encodeURIComponent(directory))
+            .then(response => response.json())
+            .then(data => {
+                const fileList = document.getElementById('fileList');
+                fileList.innerHTML = '';
+                
+                // Add parent directory option if not at root
+                if (directory !== '/') {
+                    const parentDir = directory.substring(0, directory.lastIndexOf('/'));
+                    const parentPath = parentDir || '/';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item directory-item';
+                    item.innerHTML = '<i class="bi bi-arrow-up-circle me-2"></i>..';
+                    item.onclick = () => navigateTo(parentPath);
+                    fileList.appendChild(item);
+                }
+                
+                // Add directories
+                if (data.directories && data.directories.length > 0) {
+                    data.directories.forEach(dir => {
+                        const item = document.createElement('div');
+                        item.className = 'list-group-item directory-item';
+                        item.innerHTML = `<i class="bi bi-folder-fill me-2"></i>${dir}`;
+                        item.onclick = () => navigateTo(`${directory === '/' ? '' : directory}/${dir}`);
+                        fileList.appendChild(item);
+                    });
+                } else {
+                    fileList.innerHTML += '<div class="list-group-item">No directories found</div>';
+                }
+            })
+            .catch(error => {
+                const fileList = document.getElementById('fileList');
+                fileList.innerHTML = `<div class="list-group-item text-danger">
+                    Error loading directory contents: ${error}
+                </div>`;
+            });
+    }
+    
+    function navigateTo(directory) {
+        currentDirectory = directory;
+        document.getElementById('currentPathText').textContent = directory;
+        updateFileList(directory);
+    }
+    
+    function selectCurrentDir() {
+        document.getElementById('repo_path').value = currentDirectory;
+        const modal = bootstrap.Modal.getInstance(document.getElementById('fileExplorerModal'));
+        modal.hide();
+        // Auto-validate after selection
+        validateRepository();
+    }
+    
+    // Initialize file explorer when modal is shown
+    document.getElementById('fileExplorerModal').addEventListener('show.bs.modal', function (event) {
+        navigateTo('/');
+    });
+</script>
 {% endblock %}

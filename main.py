@@ -83,18 +83,205 @@ def audit():
             flash('Repository path is required', 'error')
             return redirect(url_for('audit'))
         
-        # Validate repo path
-        if not os.path.isdir(repo_path):
-            flash(f'Invalid repository path: {repo_path}', 'error')
+        # Expand path if it contains a tilde
+        if '~' in repo_path:
+            repo_path = os.path.expanduser(repo_path)
+        
+        # Convert to absolute path if it's relative
+        if not os.path.isabs(repo_path):
+            repo_path = os.path.abspath(repo_path)
+        
+        # Enhanced validation of repository path
+        validation_result, validation_message = validate_repository_path(repo_path)
+        if not validation_result:
+            flash(validation_message, 'error')
             return redirect(url_for('audit'))
         
         # Store form data in session
         session['repo_path'] = repo_path
         session['branch'] = request.form.get('branch', 'main')
         
+        # Add debug info to session
+        repo_stats = get_repository_stats(repo_path)
+        session['repo_stats'] = repo_stats
+        logger.info(f"Repository validated: {repo_path} with {repo_stats['total_files']} files")
+        
         return redirect(url_for('run_audit'))
     
-    return render_template('audit_form.html')
+    # Get list of sample test repositories for the dropdown
+    test_repos_dir = os.path.join(os.path.dirname(__file__), 'test_repos')
+    sample_repos = []
+    if os.path.isdir(test_repos_dir):
+        sample_repos = [os.path.join(test_repos_dir, d) for d in os.listdir(test_repos_dir) 
+                      if os.path.isdir(os.path.join(test_repos_dir, d))]
+    
+    return render_template('audit_form.html', sample_repos=sample_repos)
+
+
+def validate_repository_path(repo_path):
+    """
+    Validate that the given path is a valid git repository with source code files.
+    
+    Args:
+        repo_path: Path to the repository
+        
+    Returns:
+        Tuple of (is_valid, message)
+    """
+    # Check if directory exists
+    if not os.path.isdir(repo_path):
+        return False, f"Directory does not exist: {repo_path}"
+    
+    # Check if it has any files
+    files = []
+    for root, _, filenames in os.walk(repo_path):
+        for filename in filenames:
+            # Skip hidden files and directories
+            if filename.startswith('.') or '/.git/' in root:
+                continue
+            file_path = os.path.join(root, filename)
+            files.append(file_path)
+    
+    if not files:
+        return False, f"No files found in repository: {repo_path}"
+    
+    # Check for source code files
+    code_extensions = ['.js', '.ts', '.py', '.rs', '.go', '.java', '.c', '.cpp', '.h', '.jsx', '.tsx', '.html', '.css']
+    code_files = [f for f in files if os.path.splitext(f)[1].lower() in code_extensions]
+    
+    if not code_files:
+        return False, f"No source code files found in repository: {repo_path}"
+    
+    return True, "Repository is valid"
+
+
+def get_repository_stats(repo_path):
+    """
+    Get statistics about the repository.
+    
+    Args:
+        repo_path: Path to the repository
+        
+    Returns:
+        Dictionary with repository statistics
+    """
+    stats = {
+        'total_files': 0,
+        'code_files': 0,
+        'doc_files': 0,
+        'other_files': 0,
+        'file_types': {},
+        'largest_files': [],
+        'directories': []
+    }
+    
+    code_extensions = ['.js', '.ts', '.py', '.rs', '.go', '.java', '.c', '.cpp', '.h', '.jsx', '.tsx', '.php', '.rb']
+    doc_extensions = ['.md', '.txt', '.rst', '.pdf', '.doc', '.docx']
+    
+    all_files = []
+    for root, dirs, files in os.walk(repo_path):
+        # Skip hidden directories and .git
+        dirs[:] = [d for d in dirs if not d.startswith('.') and d != '.git']
+        
+        # Add to directory list
+        rel_dir = os.path.relpath(root, repo_path)
+        if rel_dir != '.' and not rel_dir.startswith('.'):
+            stats['directories'].append(rel_dir)
+        
+        for filename in files:
+            # Skip hidden files
+            if filename.startswith('.'):
+                continue
+                
+            file_path = os.path.join(root, filename)
+            rel_path = os.path.relpath(file_path, repo_path)
+            ext = os.path.splitext(filename)[1].lower()
+            
+            # Skip very large files
+            try:
+                size = os.path.getsize(file_path)
+                if size > 1000000:  # 1MB
+                    continue
+                
+                # Aggregate statistics
+                stats['total_files'] += 1
+                
+                # Categorize file types
+                if ext in code_extensions:
+                    stats['code_files'] += 1
+                elif ext in doc_extensions:
+                    stats['doc_files'] += 1
+                else:
+                    stats['other_files'] += 1
+                
+                # Count file types
+                if ext not in stats['file_types']:
+                    stats['file_types'][ext] = 0
+                stats['file_types'][ext] += 1
+                
+                # Track file info for largest files
+                all_files.append((rel_path, size, ext))
+            except (IOError, OSError):
+                # Skip files that can't be accessed
+                continue
+    
+    # Get top 10 largest files
+    all_files.sort(key=lambda x: x[1], reverse=True)
+    stats['largest_files'] = [(path, size) for path, size, _ in all_files[:10]]
+    
+    # Limit the number of directories shown
+    stats['directories'] = stats['directories'][:20]
+    
+    return stats
+
+@app.route('/debug-repository')
+def debug_repository():
+    """Debug repository files and structure."""
+    repo_path = session.get('repo_path')
+    
+    if not repo_path:
+        flash('Repository information not found', 'error')
+        return redirect(url_for('audit'))
+    
+    # Get repository statistics
+    repo_stats = get_repository_stats(repo_path)
+    
+    # Get sample file contents
+    code_samples = []
+    extensions = ['.js', '.ts', '.py', '.rs', '.go', '.java', '.jsx', '.tsx']
+    count = 0
+    
+    for root, _, files in os.walk(repo_path):
+        if count >= 5:  # Limit to 5 code samples
+            break
+            
+        for file in files:
+            if count >= 5:
+                break
+                
+            ext = os.path.splitext(file)[1].lower()
+            if ext in extensions:
+                file_path = os.path.join(root, file)
+                rel_path = os.path.relpath(file_path, repo_path)
+                
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read(1000)  # First 1000 chars
+                    
+                    code_samples.append({
+                        'path': rel_path,
+                        'content': content[:1000] + ('...' if len(content) > 1000 else '')
+                    })
+                    count += 1
+                except:
+                    pass
+    
+    return render_template(
+        'debug_repository.html',
+        repo_path=repo_path,
+        repo_stats=repo_stats,
+        code_samples=code_samples
+    )
 
 @app.route('/run-audit')
 def run_audit():
@@ -105,6 +292,13 @@ def run_audit():
     
     if not repo_path:
         flash('Repository information not found', 'error')
+        return redirect(url_for('audit'))
+    
+    # Double-check validation just to be safe
+    validation_result, validation_message = validate_repository_path(repo_path)
+    if not validation_result:
+        flash(validation_message, 'error')
+        flash('Please select a valid repository with source code files.', 'error')
         return redirect(url_for('audit'))
     
     try:
@@ -126,8 +320,30 @@ def run_audit():
         # Get files from repo
         files = list(repo_provider.get_files())
         
+        # Log detailed information about the files being processed
+        logger.info(f"Repository: {repo_path}, Branch: {branch}")
+        logger.info(f"Number of files retrieved: {len(files)}")
+        
+        # Log some sample file paths for debugging
+        file_paths = [f[0] for f in files[:10]]  # Get first 10 file paths
+        logger.info(f"Sample file paths: {file_paths}")
+        
+        # Check if we have enough code files for analysis
+        code_extensions = ['.js', '.ts', '.py', '.rs', '.go', '.java', '.c', '.cpp', '.jsx', '.tsx']
+        code_files = [f for f in files if os.path.splitext(f[0])[1].lower() in code_extensions]
+        
+        logger.info(f"Number of code files: {len(code_files)}")
+        
+        if len(code_files) < 3:
+            logger.warning(f"Very few code files found: {len(code_files)}. This might lead to poor analysis.")
+            flash(f"Warning: Only {len(code_files)} code files found in the repository. This might lead to poor analysis results.", 'warning')
+        
         # Initialize repository analyzer to provide enhanced analysis
         repo_analyzer = RepoAnalyzer(repo_path=repo_path, branch=branch)
+        
+        # Log analyzer info
+        repo_analysis = repo_analyzer.analyze()
+        logger.info(f"Repository analysis summary: {repo_analysis}")
         
         # Get category handlers, passing branch parameter
         category_handlers = get_category_handlers(config, ai_client, repo_path, branch)
