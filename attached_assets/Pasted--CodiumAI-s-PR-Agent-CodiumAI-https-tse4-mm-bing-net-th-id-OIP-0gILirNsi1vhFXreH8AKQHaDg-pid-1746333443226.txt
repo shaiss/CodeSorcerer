@@ -1,0 +1,214 @@
+[![CodiumAI's PR-Agent | CodiumAI](https://tse4.mm.bing.net/th?id=OIP._0gILirNsi1vhFXreH8AKQHaDg&pid=Api)](https://www.codium.ai/pr-agent/)
+Here is the detailed architecture document for our development team, focusing on Part 1: the hackathon-ready deliverable.
+
+---
+
+# 🛠️ Hackathon Auditor – Architecture Document (Part 1: MVP for NEAR Hackathon)
+
+**Version:** 1.0  
+**Date:** May 4, 2025  
+**Lead Developer:** [Your Name]
+
+---
+
+## 🎯 Objective
+
+Develop a command-line tool, `audit-near`, enabling hackathon judges to perform on-demand, full-repository audits of NEAR-based projects. The tool should generate a Markdown scorecard based on a predefined seven-category rubric.
+
+**Key Features:**
+
+- Local execution without reliance on PR triggers.
+- Utilization of OpenAI GPT-4.1 models (standard and nano variants).
+- Modular design to facilitate future enhancements (e.g., security checks, AST analysis).
+
+---
+
+## 🧱 Foundation Repository
+
+**Base:** Fork of [`qodo-ai/pr-agent`](https://github.com/qodo-ai/pr-agent)
+
+**Justification:**
+
+- Python-based with Apache-2.0 license.
+- Active development and community support.
+- Modular architecture with configurable categories via TOML files.
+- Existing CLI support and extensible provider system. ([GitHub - shaneholloman/qodo-ai-pr-agent: PR-Agent (Qodo Merge open ...](https://github.com/shaneholloman/qodo-ai-pr-agent?utm_source=chatgpt.com), [pr-agent/pr_agent/settings/configuration.toml at main - GitHub](https://github.com/qodo-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml?utm_source=chatgpt.com))
+
+---
+
+## 🗂️ Directory Structure
+
+
+```plaintext
+audit-near/
+├── audit_near/
+│   ├── __init__.py
+│   ├── cli.py
+│   ├── providers/
+│   │   ├── __init__.py
+│   │   └── repo_provider.py
+│   ├── reporters/
+│   │   ├── __init__.py
+│   │   └── markdown_reporter.py
+│   └── categories/
+│       ├── __init__.py
+│       └── [category_name].py
+├── prompts/
+│   └── [category_name].md
+├── configs/
+│   └── near_hackathon.toml
+├── tests/
+│   └── test_audit_near.py
+├── setup.py
+└── README.md
+```
+
+
+---
+
+## 🔧 Implementation Plan
+
+### 1. **Repository Provider**
+
+**File:** `audit_near/providers/repo_provider.py`  
+**Description:** Implements a provider to traverse the local repository, yielding file paths and contents, excluding `.git` directories.
+
+**Action Items:**
+
+- Create `RepoProvider` class inheriting from `BaseProvider`.
+- Implement `get_files()` method to recursively yield file paths and contents.
+
+### 2. **Command-Line Interface (CLI)**
+
+**File:** `audit_near/cli.py`  
+**Description:** Handles command-line arguments and orchestrates the audit process.
+
+**Action Items:**
+
+- Utilize `argparse` or `typer` for CLI argument parsing.
+- Support arguments:
+  - `--repo`: Path or URL to the repository.
+  - `--branch`: Branch name (default: `main`).
+  - `--config`: Path to the TOML configuration file.
+  - `--output`: Path to the output Markdown report. ([PR Agent: automated pull request analysis tool - Chief AI Sharing Circle](https://www.aisharenet.com/en/pr-agent/?utm_source=chatgpt.com))
+
+### 3. **Configuration Management**
+
+**File:** `configs/near_hackathon.toml`  
+**Description:** Defines the seven audit categories, each with `name`, `max_points`, and `prompt_file`.
+
+**Action Items:**
+
+- Create a TOML file listing all categories with their respective configurations.
+- Ensure the CLI loads this configuration for processing.
+
+### 4. **Prompt Templates**
+
+**Directory:** `prompts/`  
+**Description:** Contains Markdown files for each category, detailing the scoring guidelines and prompts for the AI model.
+
+**Action Items:**
+
+- Create individual `.md` files for each category as specified in the TOML configuration.
+- Ensure prompts are clear and aligned with the scoring rubric.
+
+### 5. **Category Processing**
+
+**Directory:** `audit_near/categories/`  
+**Description:** Implements logic to process each category using the corresponding prompt and AI model.
+
+**Action Items:**
+
+- For each category:
+  - Load the prompt template.
+  - Invoke the OpenAI GPT-4.1 model with the prompt and relevant code context.
+  - Parse the AI's response to extract the score and feedback. ([pr-agent/pr_agent/tools/pr_reviewer.py at main · qodo-ai/pr-agent - GitHub](https://github.com/qodo-ai/pr-agent/blob/main/pr_agent/tools/pr_reviewer.py?utm_source=chatgpt.com))
+
+### 6. **Reporting**
+
+**File:** `audit_near/reporters/markdown_reporter.py`  
+**Description:** Generates a Markdown report summarizing the audit results.
+
+**Action Items:**
+
+- Implement `MarkdownReporter` class to format and write the audit results to a Markdown file.
+- Include repository details, date, individual category scores, total score, and feedback.
+
+### 7. **Testing**
+
+**Directory:** `tests/`  
+**Description:** Contains unit tests to validate the functionality of each component.
+
+**Action Items:**
+
+- Write tests for:
+  - `RepoProvider` file traversal.
+  - CLI argument parsing.
+  - Category processing logic.
+  - Markdown report generation. ([Guidance for Automating Tasks Using Agents for Amazon Bedrock](https://aws.amazon.com/solutions/guidance/automating-tasks-using-agents-for-amazon-bedrock/?utm_source=chatgpt.com))
+
+---
+
+## 🤖 AI Model Integration
+
+**Models:**
+
+- **OpenAI GPT-4.1:** For processing complex prompts and generating detailed feedback.
+- **OpenAI GPT-4.1 Nano:** For lightweight tasks or where resource constraints exist.
+
+**Integration:**
+
+- Utilize OpenAI's API with appropriate model selection based on task complexity.
+- Implement error handling and retries for API calls.
+
+---
+
+## 🧪 Testing & Validation
+
+**Test Cases:**
+
+- Run the tool on sample NEAR-based repositories.
+- Validate that the generated Markdown report aligns with the scoring rubric.
+- Ensure that the tool handles edge cases gracefully (e.g., empty repositories, missing files).
+
+---
+
+## 📦 Packaging & Distribution
+
+**Setup:**
+
+- Create a `setup.py` file for packaging the tool.
+- Include dependencies in `requirements.txt`.
+
+**Distribution:**
+
+- Package the tool for distribution via PyPI or internal channels.
+- Provide installation instructions in the `README.md`.
+
+---
+
+## 📅 Timeline
+
+| Task                         | Duration |
+|------------------------------|----------|
+| Repository Provider          | 1 day    |
+| CLI Implementation           | 1 day    |
+| Configuration & Prompts      | 1 day    |
+| Category Processing          | 1 day    |
+| Reporting                    | 1 day    |
+| Testing & Validation         | 1 day    |
+| Packaging & Documentation    | 1 day    |
+| **Total**                    | **7 days** |
+
+---
+
+## 🧩 Future Enhancements (Part 2: Bolt-Ons)
+
+- **Security Analysis:** Integrate tools like AutoSafeCoder for security checks.
+- **AST Analysis:** Incorporate AST parsing for deeper code analysis.
+- **PR Integration:** Enable the tool to run as part of PR workflows.
+- **Web Interface:** Develop a web-based interface for broader accessibility.
+
+---
+
+This architecture provides a clear roadmap for developing the `audit-near` tool, ensuring it meets the immediate needs of the hackathon while laying the groundwork for future enhancements. 
