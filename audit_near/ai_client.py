@@ -18,12 +18,13 @@ class AiClient:
     Client for interacting with OpenAI models.
     """
     
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, config: Optional[Dict] = None):
         """
         Initialize the AI client.
         
         Args:
             api_key: OpenAI API key (default: None, falls back to environment variable)
+            config: Configuration dictionary (default: None, will load default config)
         """
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         if not self.api_key:
@@ -32,11 +33,26 @@ class AiClient:
         self.client = OpenAI(api_key=self.api_key)
         self.logger = logging.getLogger(__name__)
         
-        # Define model names
-        # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-        # do not change this unless explicitly requested by the user
-        self.primary_model = "gpt-4o"
-        self.nano_model = "gpt-4o"  # Using the same model for both until a true "nano" variant is available
+        # Load config if not provided
+        if config is None:
+            import tomli
+            config_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "configs",
+                "near_hackathon.toml"
+            )
+            try:
+                with open(config_path, "rb") as f:
+                    config = tomli.load(f)
+            except Exception as e:
+                self.logger.warning(f"Could not load config file: {e}. Using default model names.")
+                config = {"ai": {"primary_model": "gpt-4.1-2025-04-14", "nano_model": "gpt-4.1-nano-2025-04-14"}}
+        
+        # Define model names from config
+        self.primary_model = config.get("ai", {}).get("primary_model", "gpt-4.1-2025-04-14")
+        self.nano_model = config.get("ai", {}).get("nano_model", "gpt-4.1-nano-2025-04-14")
+        
+        self.logger.info(f"Using models: primary={self.primary_model}, nano={self.nano_model}")
     
     def _call_openai(
         self, 

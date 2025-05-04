@@ -41,5 +41,5 @@ max_points = 10
 description = "Assesses proper integration with NEAR blockchain and related technologies"
 
 [ai]
-primary_model = "gpt-4o"
-nano_model = "gpt-4o"
+primary_model = "gpt-4.1-2025-04-14"
+nano_model = "gpt-4.1-nano-2025-04-14"

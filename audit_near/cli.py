@@ -155,11 +155,11 @@ def main():
         logging.error("OpenAI API key is required. Set it via --api-key or OPENAI_API_KEY environment variable.")
         sys.exit(1)
     
-    # Create AI client
-    ai_client = AiClient(api_key=api_key)
-    
     # Load configuration
     config = load_config(args.config)
+    
+    # Create AI client
+    ai_client = AiClient(api_key=api_key, config=config)
     
     # Create repo provider
     repo_provider = RepoProvider(repo_path=args.repo, branch=args.branch)

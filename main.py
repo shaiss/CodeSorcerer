@@ -117,7 +117,7 @@ def run_audit():
             flash('OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.', 'error')
             return redirect(url_for('audit'))
         
-        ai_client = AiClient(api_key=api_key)
+        ai_client = AiClient(api_key=api_key, config=config)
         
         # Initialize repo provider
         repo_provider = RepoProvider(repo_path=repo_path)
