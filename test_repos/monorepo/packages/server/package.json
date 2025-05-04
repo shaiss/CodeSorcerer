@@ -1,0 +1,23 @@
+{
+  "name": "server",
+  "module": "./src/index.ts",
+  "type": "module",
+  "types": "./src/index.ts",
+  "scripts": {
+    "dev": "bun run ./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.80.1",
+    "@effect/platform-bun": "^0.60.4",
+    "@effect/rpc": "^0.55.1",
+    "effect": "^3.14.1",
+    "poker-state-machine": "workspace:*",
+    "ws": "^8.18.0"
+  }
+}

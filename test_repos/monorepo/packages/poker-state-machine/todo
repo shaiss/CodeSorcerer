@@ -1,0 +1,13 @@
+# create new version of poker-state-machine
+
+- base yourself on the types in `new_fsm.ts` and the implementation on `transitions.ts`
+- players need to have status so we don't need to remove them from the players array (all_in, folded, in)
+- you can have a single type for all the betting stages of the game (preflop, flop, river, turn)
+- you need to keep information about the dealer, current player, blinds etc, but blinds is inferrable from dealer, and you can rotate the players array on state transition so the first index is always the current player. this is useful so our state object is lean is completely determines actual game state, that way it's harder to have illegal state being representable
+- you need to keep current bet and total pot, and of course community cards
+- besides that it's all player state, which is id, chips, hands, and bet (it's important that even folded players have bet because that's going to help to infer the side pots
+- use effect-ts when applicable and read `prompt_small.md` on the root of the monorepo for reference
+- for example, I think `Effect.gen(function* () { ... })` could be useful for the overall control flow of the state machine, and then we have individual transition functions which can return effects of PokerState and some error or whatever
+- I want a better way of signaling state transition from different betting stages than we have currently, ideally in a way which doesn't need intermediary invalid states, so maybe returning an Effect as a Result or returning an union somewhere where the state could either keep in the same betting stage or transition to the next
+- when you think you are done copy the test-cases from `state_machine.test.ts` and adapt them if needed, without changing the actual moves performed and asserted state
+- do your implementation on `poker-state-machine/new-src`, break it in small files when needed 

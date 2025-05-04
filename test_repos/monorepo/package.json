@@ -1,0 +1,10 @@
+{
+  "name": "poker-game-server",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --watch packages/server/src/index.ts"
+  }
+}

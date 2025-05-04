@@ -1,0 +1,9 @@
+{
+  "name": "poker-state-machine",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "effect": "^3.13.10"
+  }
+}

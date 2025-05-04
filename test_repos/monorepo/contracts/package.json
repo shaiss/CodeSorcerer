@@ -1,0 +1,35 @@
+{
+  "name": "ai-gaming-club-near",
+  "version": "1.0.0",
+  "description": "AI Gaming Club NEAR Contract for GameFi betting",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "deploy": "node scripts/deploy.js",
+    "deploy:testnet": "node scripts/deploy-testnet.js",
+    "deploy:mainnet": "node scripts/deploy-mainnet.js",
+    "interact": "node scripts/interact.js",
+    "admin": "node scripts/admin.js",
+    "monitor": "node scripts/monitor.js",
+    "test": "mocha test/**/*.test.js --timeout 60000"
+  },
+  "keywords": [
+    "near",
+    "blockchain",
+    "smart-contract",
+    "gaming",
+    "betting"
+  ],
+  "author": "AI Gaming Club",
+  "license": "ISC",
+  "dependencies": {
+    "near-api-js": "^5.1.1",
+    "near-sdk-js": "^2.0.0"
+  },
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "dotenv": "^16.3.1",
+    "mocha": "^10.2.0"
+  }
+}

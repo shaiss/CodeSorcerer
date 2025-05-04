@@ -7,6 +7,12 @@ import logging
 from pathlib import Path
 import tempfile
 import json
+import threading
+import time
+import uuid
+from enum import Enum, auto
+from dataclasses import dataclass, field
+from typing import Dict, List, Tuple, Any, Optional
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
@@ -15,7 +21,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
@@ -339,6 +345,97 @@ def directory_contents_endpoint():
             'error': f'Error getting directory contents: {str(e)}'
         })
 
+# Progress tracking infrastructure
+class AuditStep(Enum):
+    REPO_VALIDATION = auto()
+    FILE_GATHERING = auto()
+    CODE_ANALYSIS = auto()
+    REPORT_GENERATION = auto()
+    
+@dataclass
+class CategoryProgress:
+    name: str
+    max_points: int
+    score: Optional[int] = None
+    completed: bool = False
+
+@dataclass
+class AuditProgress:
+    id: str
+    repo_path: str
+    branch: str
+    steps: Dict[str, int] = field(default_factory=lambda: {
+        "repo_validation": 0,
+        "file_gathering": 0,
+        "code_analysis": 0,
+        "report_generation": 0
+    })
+    current_task: str = "Initializing..."
+    overall_percentage: int = 0
+    categories_pending: List[Dict] = field(default_factory=list)
+    categories_completed: List[Dict] = field(default_factory=list)
+    report_id: Optional[int] = None
+    error: Optional[str] = None
+    
+    def update_step_progress(self, step: AuditStep, percentage: int, task_description: str = None):
+        """Update progress for a specific step"""
+        step_name = step.name.lower()
+        step_key = {
+            "repo_validation": "repo_validation",
+            "file_gathering": "file_gathering",
+            "code_analysis": "code_analysis", 
+            "report_generation": "report_generation"
+        }.get(step_name, step_name)
+        
+        self.steps[step_key] = percentage
+        
+        if task_description:
+            self.current_task = task_description
+            
+        # Calculate overall percentage
+        total = sum(self.steps.values())
+        self.overall_percentage = min(100, total // len(self.steps))
+    
+    def add_pending_category(self, name: str, max_points: int):
+        """Add a category to the pending list"""
+        self.categories_pending.append({
+            "name": name,
+            "max_points": max_points,
+            "score": None
+        })
+    
+    def complete_category(self, name: str, score: int):
+        """Mark a category as completed"""
+        # Remove from pending
+        pending = [c for c in self.categories_pending if c["name"] != name]
+        
+        # Find the max points
+        max_points = next((c["max_points"] for c in self.categories_pending if c["name"] == name), 10)
+        
+        # Add to completed
+        self.categories_completed.append({
+            "name": name,
+            "max_points": max_points,
+            "score": score
+        })
+        
+        # Update pending list
+        self.categories_pending = pending
+    
+    def set_report_id(self, report_id: int):
+        """Set the final report ID"""
+        self.report_id = report_id
+        self.overall_percentage = 100
+        self.current_task = "Audit complete! Generating final report..."
+    
+    def set_error(self, error_message: str):
+        """Set an error message"""
+        self.error = error_message
+        self.current_task = "Error encountered"
+
+# Dictionary to store audit progress by ID
+audit_progress_store = {}
+
 @app.route('/debug-repository')
 def debug_repository():
     """Debug repository files and structure."""
@@ -387,6 +484,261 @@ def debug_repository():
         repo_stats=repo_stats,
         code_samples=code_samples
     )
+
+@app.route('/audit-progress')
+def audit_progress():
+    """Show the audit progress page."""
+    # Get progress ID from session
+    progress_id = session.get('audit_progress_id')
+    
+    if not progress_id or progress_id not in audit_progress_store:
+        flash('No audit in progress', 'error')
+        return redirect(url_for('audit'))
+    
+    # Get progress data
+    progress = audit_progress_store[progress_id]
+    
+    # If complete, redirect to report
+    if progress.report_id and progress.overall_percentage >= 100:
+        return redirect(url_for('view_report', report_id=progress.report_id))
+    
+    return render_template('audit_progress.html', progress=progress)
+
+@app.route('/check-audit-progress')
+def check_audit_progress():
+    """Check the current audit progress."""
+    # Get progress ID from session
+    progress_id = session.get('audit_progress_id')
+    
+    if not progress_id or progress_id not in audit_progress_store:
+        flash('No audit in progress', 'error')
+        return redirect(url_for('audit'))
+    
+    # Get progress data
+    progress = audit_progress_store[progress_id]
+    
+    # If complete with a report ID, redirect to report
+    if progress.report_id and progress.overall_percentage >= 100:
+        return redirect(url_for('view_report', report_id=progress.report_id))
+    
+    # Otherwise, return to progress page
+    return render_template('audit_progress.html', progress=progress)
+
+def run_audit_in_background(progress_id, repo_path, branch, config):
+    """
+    Run the audit process in a background thread with progress updates.
+    
+    Args:
+        progress_id: ID of the audit progress
+        repo_path: Path to the repository
+        branch: Branch name
+        config: Configuration dictionary
+    """
+    progress = audit_progress_store[progress_id]
+    
+    try:
+        # Initialize AI client
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            progress.set_error('OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.')
+            return
+        
+        # Update progress - Repo validation (10%)
+        progress.update_step_progress(
+            AuditStep.REPO_VALIDATION, 25, 
+            "Validating repository and initializing systems..."
+        )
+        
+        ai_client = AiClient(api_key=api_key, config=config)
+        
+        # Initialize repo provider with branch
+        progress.update_step_progress(
+            AuditStep.REPO_VALIDATION, 50, 
+            "Initializing repository provider..."
+        )
+        
+        repo_provider = RepoProvider(repo_path=repo_path, branch=branch)
+        
+        # Update progress - Repo validation complete
+        progress.update_step_progress(
+            AuditStep.REPO_VALIDATION, 100, 
+            "Repository validated successfully!"
+        )
+        
+        # Update progress - File gathering (start)
+        progress.update_step_progress(
+            AuditStep.FILE_GATHERING, 10, 
+            "Collecting files from repository..."
+        )
+        
+        # Get files from repo
+        files = list(repo_provider.get_files())
+        
+        # Log detailed information about the files being processed
+        logger.info(f"Repository: {repo_path}, Branch: {branch}")
+        logger.info(f"Number of files retrieved: {len(files)}")
+        
+        # Check if we have enough code files for analysis
+        code_extensions = ['.js', '.ts', '.py', '.rs', '.go', '.java', '.c', '.cpp', '.jsx', '.tsx']
+        code_files = [f for f in files if os.path.splitext(f[0])[1].lower() in code_extensions]
+        
+        logger.info(f"Number of code files: {len(code_files)}")
+        
+        # Update progress - File gathering (50%)
+        progress.update_step_progress(
+            AuditStep.FILE_GATHERING, 50, 
+            f"Found {len(files)} files, including {len(code_files)} code files."
+        )
+        
+        # Initialize repository analyzer to provide enhanced analysis
+        repo_analyzer = RepoAnalyzer(repo_path=repo_path, branch=branch)
+        
+        # Update progress - File gathering (70%)
+        progress.update_step_progress(
+            AuditStep.FILE_GATHERING, 70, 
+            "Analyzing repository structure and language usage..."
+        )
+        
+        # Log analyzer info
+        repo_analysis = repo_analyzer.analyze()
+        
+        # Update progress - File gathering complete
+        progress.update_step_progress(
+            AuditStep.FILE_GATHERING, 100, 
+            "File gathering and analysis complete!"
+        )
+        
+        # Get category handlers, passing branch parameter
+        category_handlers = get_category_handlers(config, ai_client, repo_path, branch)
+        
+        # Update category list in progress
+        for category_name, handler in category_handlers.items():
+            max_points = config['categories'][category_name]['max_points']
+            progress.add_pending_category(category_name, max_points)
+        
+        # Update progress - AI Analysis (start)
+        progress.update_step_progress(
+            AuditStep.CODE_ANALYSIS, 5, 
+            "Starting AI code analysis..."
+        )
+        
+        # Process each category
+        results = {}
+        total_score = 0
+        total_possible = 0
+        
+        # Calculate progress increment per category
+        analysis_increment = 90 // len(category_handlers) if category_handlers else 90
+        analysis_progress = 5  # Start at 5%
+        
+        for category_name, handler in category_handlers.items():
+            # Update progress for this category
+            progress.update_step_progress(
+                AuditStep.CODE_ANALYSIS, 
+                analysis_progress + analysis_increment // 2,
+                f"Analyzing {category_name}..."
+            )
+            
+            # Process the category
+            logger.info(f"Processing category: {category_name}")
+            score, feedback = handler.process(files)
+            
+            # Update progress
+            max_points = config['categories'][category_name]['max_points']
+            total_possible += max_points
+            total_score += score
+            
+            # Store results
+            results[category_name] = {
+                'score': score,
+                'max_points': max_points,
+                'feedback': feedback
+            }
+            
+            # Mark category as complete
+            progress.complete_category(category_name, score)
+            
+            # Increment progress
+            analysis_progress += analysis_increment
+            progress.update_step_progress(
+                AuditStep.CODE_ANALYSIS, 
+                analysis_progress,
+                f"Completed analysis of {category_name}."
+            )
+        
+        # Update progress - AI Analysis complete
+        progress.update_step_progress(
+            AuditStep.CODE_ANALYSIS, 100, 
+            "AI code analysis complete!"
+        )
+        
+        # Update progress - Report generation (start)
+        progress.update_step_progress(
+            AuditStep.REPORT_GENERATION, 25, 
+            "Generating audit report..."
+        )
+        
+        # Generate markdown report file
+        with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.md') as f:
+            temp_report_path = f.name
+        
+        reporter = MarkdownReporter()
+        reporter.generate_report(
+            repo_path=repo_path,
+            branch=branch,
+            results=results,
+            total_score=total_score,
+            total_possible=total_possible,
+            output_path=temp_report_path
+        )
+        
+        # Update progress - Report generation (50%)
+        progress.update_step_progress(
+            AuditStep.REPORT_GENERATION, 50, 
+            "Saving report to database..."
+        )
+        
+        # Read the report content
+        with open(temp_report_path, 'r') as f:
+            report_content = f.read()
+        
+        # Save to database
+        repo_name = os.path.basename(repo_path)
+        new_report = AuditReport(
+            repo_name=repo_name,
+            repo_path=repo_path,
+            branch=branch,
+            total_score=total_score,
+            total_possible=total_possible,
+            report_data=json.dumps(results)
+        )
+        
+        # Update progress - Report generation (75%)
+        progress.update_step_progress(
+            AuditStep.REPORT_GENERATION, 75, 
+            "Finalizing report..."
+        )
+        
+        with app.app_context():
+            db.session.add(new_report)
+            db.session.commit()
+            report_id = new_report.id
+        
+        # Clean up
+        os.unlink(temp_report_path)
+        
+        # Update progress - Report generation complete
+        progress.update_step_progress(
+            AuditStep.REPORT_GENERATION, 100, 
+            "Audit completed successfully!"
+        )
+        
+        # Set final report ID
+        progress.set_report_id(report_id)
+        
+    except Exception as e:
+        logger.exception("Error running audit")
+        progress.set_error(f"Error running audit: {str(e)}")
 
 @app.route('/run-audit')
 def run_audit():

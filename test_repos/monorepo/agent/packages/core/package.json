@@ -1,0 +1,73 @@
+{
+    "name": "@elizaos/core",
+    "version": "0.25.9",
+    "description": "",
+    "type": "module",
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "import": {
+                "@elizaos/source": "./src/index.ts",
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup --format esm --dts",
+        "watch": "tsc --watch",
+        "dev": "tsup --format esm --dts --watch",
+        "build:docs": "cd docs && pnpm run build",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:watch": "vitest"
+    },
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "22.8.4",
+        "tsup": "8.3.5",
+        "typescript": "5.6.3"
+    },
+    "dependencies": {
+        "@ai-sdk/amazon-bedrock": "1.1.6",
+        "@ai-sdk/anthropic": "1.1.6",
+        "@ai-sdk/google": "1.1.0",
+        "@ai-sdk/groq": "1.1.7",
+        "@ai-sdk/mistral": "1.1.6",
+        "@ai-sdk/openai": "1.1.9",
+        "@electric-sql/pglite": "^0.2.17",
+        "@fal-ai/client": "1.2.0",
+        "@supabase/supabase-js": "^2.49.1",
+        "@types/uuid": "10.0.0",
+        "ai": "4.1.16",
+        "better-sqlite3": "11.8.1",
+        "bignumber.js": "9.1.2",
+        "dotenv": "16.4.5",
+        "fastembed": "1.14.1",
+        "glob": "11.0.0",
+        "handlebars": "^4.7.8",
+        "js-sha1": "0.7.0",
+        "js-tiktoken": "1.0.15",
+        "ollama-ai-provider": "0.16.1",
+        "openai": "4.82.0",
+        "pino": "^9.6.0",
+        "pino-pretty": "^13.0.0",
+        "sql.js": "^1.12.0",
+        "together-ai": "0.7.0",
+        "unique-names-generator": "4.7.1",
+        "uuid": "11.0.3",
+        "viem": "2.21.58",
+        "vitest": "^3.0.5",
+        "zod": "^3.24.2"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

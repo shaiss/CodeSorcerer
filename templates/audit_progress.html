@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Audit in Progress - NEAR Hackathon Auditor{% endblock %}
+
+{% block head %}
+{{ super() }}
+<meta http-equiv="refresh" content="5;url={{ url_for('check_audit_progress') }}">
+<style>
+    .progress-container {
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 5px;
+    }
+    .step {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .step-pending {
+        background-color: var(--bs-gray-200);
+        color: var(--bs-gray-600);
+    }
+    .step-in-progress {
+        background-color: var(--bs-info);
+        color: var(--bs-white);
+    }
+    .step-completed {
+        background-color: var(--bs-success);
+        color: var(--bs-white);
+    }
+    .step-error {
+        background-color: var(--bs-danger);
+        color: var(--bs-white);
+    }
+    .step-icon {
+        margin-right: 10px;
+    }
+    .progress {
+        height: 10px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
+    .audit-details {
+        margin-top: 30px;
+    }
+    .category-list {
+        margin-top: 15px;
+    }
+    .category-item {
+        padding: 5px 0;
+    }
+    .current-task {
+        font-weight: bold;
+        margin-top: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2>NEAR Hackathon Audit in Progress</h2>
+                    <span class="badge bg-primary">{{ progress.overall_percentage }}% Complete</span>
+                </div>
+                <div class="card-body">
+                    {% if progress.error %}
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> {{ progress.error }}
+                    </div>
+                    <p>
+                        <a href="{{ url_for('audit') }}" class="btn btn-primary">Start New Audit</a>
+                    </p>
+                    {% else %}
+                    
+                    <div class="progress-container">
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress.overall_percentage }}%" 
+                                aria-valuenow="{{ progress.overall_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                        
+                        <div class="step {{ 'step-completed' if progress.steps.repo_validation >= 100 else 'step-in-progress' if progress.steps.repo_validation > 0 else 'step-pending' }}">
+                            <i class="step-icon bi {{ 'bi-check-circle-fill' if progress.steps.repo_validation >= 100 else 'bi-arrow-repeat' if progress.steps.repo_validation > 0 else 'bi-circle' }}"></i>
+                            Repository Validation
+                            <span class="float-end badge {{ 'bg-success' if progress.steps.repo_validation >= 100 else 'bg-info' if progress.steps.repo_validation > 0 else 'bg-secondary' }}">
+                                {{ progress.steps.repo_validation }}%
+                            </span>
+                        </div>
+                        
+                        <div class="step {{ 'step-completed' if progress.steps.file_gathering >= 100 else 'step-in-progress' if progress.steps.file_gathering > 0 else 'step-pending' }}">
+                            <i class="step-icon bi {{ 'bi-check-circle-fill' if progress.steps.file_gathering >= 100 else 'bi-arrow-repeat' if progress.steps.file_gathering > 0 else 'bi-circle' }}"></i>
+                            File Gathering and Analysis
+                            <span class="float-end badge {{ 'bg-success' if progress.steps.file_gathering >= 100 else 'bg-info' if progress.steps.file_gathering > 0 else 'bg-secondary' }}">
+                                {{ progress.steps.file_gathering }}%
+                            </span>
+                        </div>
+                        
+                        <div class="step {{ 'step-completed' if progress.steps.code_analysis >= 100 else 'step-in-progress' if progress.steps.code_analysis > 0 else 'step-pending' }}">
+                            <i class="step-icon bi {{ 'bi-check-circle-fill' if progress.steps.code_analysis >= 100 else 'bi-arrow-repeat' if progress.steps.code_analysis > 0 else 'bi-circle' }}"></i>
+                            AI Code Analysis
+                            <span class="float-end badge {{ 'bg-success' if progress.steps.code_analysis >= 100 else 'bg-info' if progress.steps.code_analysis > 0 else 'bg-secondary' }}">
+                                {{ progress.steps.code_analysis }}%
+                            </span>
+                        </div>
+                        
+                        <div class="step {{ 'step-completed' if progress.steps.report_generation >= 100 else 'step-in-progress' if progress.steps.report_generation > 0 else 'step-pending' }}">
+                            <i class="step-icon bi {{ 'bi-check-circle-fill' if progress.steps.report_generation >= 100 else 'bi-arrow-repeat' if progress.steps.report_generation > 0 else 'bi-circle' }}"></i>
+                            Report Generation
+                            <span class="float-end badge {{ 'bg-success' if progress.steps.report_generation >= 100 else 'bg-info' if progress.steps.report_generation > 0 else 'bg-secondary' }}">
+                                {{ progress.steps.report_generation }}%
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="audit-details">
+                        <div class="current-task">
+                            <h5>Current Task: <span class="text-primary">{{ progress.current_task }}</span></h5>
+                        </div>
+                        
+                        {% if progress.categories_completed or progress.categories_pending %}
+                        <div class="category-list mt-4">
+                            <h5>Category Progress:</h5>
+                            <div class="row">
+                                {% if progress.categories_completed %}
+                                <div class="col-md-6">
+                                    <h6>Completed Categories:</h6>
+                                    <ul class="list-group">
+                                        {% for category in progress.categories_completed %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{ category.name }}
+                                            <span class="badge bg-success rounded-pill">{{ category.score }} / {{ category.max_points }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                                
+                                {% if progress.categories_pending %}
+                                <div class="col-md-6">
+                                    <h6>Pending Categories:</h6>
+                                    <ul class="list-group">
+                                        {% for category in progress.categories_pending %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{ category.name }}
+                                            <span class="badge bg-secondary rounded-pill">Pending</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if progress.overall_percentage >= 100 %}
+                        <div class="mt-4">
+                            <a href="{{ url_for('view_report', report_id=progress.report_id) }}" class="btn btn-success">
+                                <i class="bi bi-file-earmark-text"></i> View Complete Audit Report
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle"></i> This page will automatically refresh every 5 seconds to show the latest progress.
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
