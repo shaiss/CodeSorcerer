@@ -1,3 +1,0 @@
-# assets
-
-Documentation for assets

@@ -1,3 +1,0 @@
-# security
-
-Documentation for security

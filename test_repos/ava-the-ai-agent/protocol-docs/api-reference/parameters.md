@@ -1,3 +1,0 @@
-# parameters
-
-Documentation for parameters

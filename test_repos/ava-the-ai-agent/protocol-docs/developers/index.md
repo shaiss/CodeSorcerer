@@ -1,3 +1,0 @@
-# developers
-
-Documentation for developers

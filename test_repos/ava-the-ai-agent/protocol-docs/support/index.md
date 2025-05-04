@@ -1,3 +1,0 @@
-# support
-
-Documentation for support

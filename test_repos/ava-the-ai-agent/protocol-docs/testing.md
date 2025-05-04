@@ -1,3 +1,0 @@
-# testing
-
-Documentation for testing

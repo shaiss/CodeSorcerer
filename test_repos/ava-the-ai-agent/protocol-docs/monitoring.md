@@ -1,3 +1,0 @@
-# monitoring
-
-Documentation for monitoring

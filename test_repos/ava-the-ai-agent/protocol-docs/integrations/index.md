@@ -1,3 +1,0 @@
-# integrations
-
-Documentation for integrations

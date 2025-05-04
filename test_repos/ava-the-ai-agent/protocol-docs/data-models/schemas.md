@@ -1,3 +1,0 @@
-# schemas
-
-Documentation for schemas

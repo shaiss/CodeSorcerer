@@ -1,3 +1,0 @@
-# endpoints
-
-Documentation for endpoints

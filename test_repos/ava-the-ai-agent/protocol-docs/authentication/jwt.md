@@ -1,3 +1,0 @@
-# jwt
-
-Documentation for jwt

@@ -1,3 +1,0 @@
-# oauth
-
-Documentation for oauth

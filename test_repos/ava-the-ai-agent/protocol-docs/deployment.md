@@ -1,3 +1,0 @@
-# deployment
-
-Documentation for deployment

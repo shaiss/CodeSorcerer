@@ -1,3 +1,0 @@
-# server
-
-Documentation for server

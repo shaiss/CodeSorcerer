@@ -1,3 +1,0 @@
-# performance
-
-Documentation for performance

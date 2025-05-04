@@ -1,3 +1,0 @@
-# architecture
-
-Documentation for architecture

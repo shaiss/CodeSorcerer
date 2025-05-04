@@ -1,3 +1,0 @@
-# production
-
-Documentation for production

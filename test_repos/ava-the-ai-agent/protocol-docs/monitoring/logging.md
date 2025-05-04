@@ -1,3 +1,0 @@
-# logging
-
-Documentation for logging

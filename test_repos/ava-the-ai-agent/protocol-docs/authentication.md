@@ -1,3 +1,0 @@
-# authentication
-
-Documentation for authentication

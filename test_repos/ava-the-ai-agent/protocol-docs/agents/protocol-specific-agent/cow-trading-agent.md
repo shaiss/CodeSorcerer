@@ -1,2 +1,0 @@
-# CoW Trading Agent
-
