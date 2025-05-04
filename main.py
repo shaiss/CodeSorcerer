@@ -60,6 +60,7 @@ with app.app_context():
 from audit_near.cli import load_config, get_category_handlers
 from audit_near.ai_client import AiClient
 from audit_near.providers.repo_provider import RepoProvider
+from audit_near.providers.repo_analyzer import RepoAnalyzer
 from audit_near.reporters.markdown_reporter import MarkdownReporter
 
 @app.route('/')
@@ -119,14 +120,17 @@ def run_audit():
         
         ai_client = AiClient(api_key=api_key, config=config)
         
-        # Initialize repo provider
-        repo_provider = RepoProvider(repo_path=repo_path)
+        # Initialize repo provider with branch
+        repo_provider = RepoProvider(repo_path=repo_path, branch=branch)
         
         # Get files from repo
         files = list(repo_provider.get_files())
         
-        # Get category handlers
-        category_handlers = get_category_handlers(config, ai_client, repo_path)
+        # Initialize repository analyzer to provide enhanced analysis
+        repo_analyzer = RepoAnalyzer(repo_path=repo_path, branch=branch)
+        
+        # Get category handlers, passing branch parameter
+        category_handlers = get_category_handlers(config, ai_client, repo_path, branch)
         
         # Process each category
         results = {}

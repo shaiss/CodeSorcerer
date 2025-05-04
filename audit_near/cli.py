@@ -106,7 +106,7 @@ def load_config(config_path: Optional[str]) -> Dict:
         sys.exit(1)
 
 
-def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str):
+def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, branch: str = "main"):
     """
     Get category handlers based on configuration.
     
@@ -114,6 +114,7 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str):
         config: Configuration dictionary
         ai_client: AI client instance
         repo_path: Path to repository
+        branch: Repository branch (default: main)
         
     Returns:
         Dictionary mapping category names to handler instances
@@ -123,14 +124,15 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str):
         "prompts"
     )
     
+    # Define category map with enhanced processors where available
     category_map = {
-        "code_quality": CodeQuality,
+        "code_quality": EnhancedCodeQuality,  # Use the enhanced version
         "functionality": Functionality,
         "security": Security,
         "innovation": Innovation,
         "documentation": Documentation,
         "ux_design": UXDesign,
-        "blockchain_integration": BlockchainIntegration,
+        "blockchain_integration": EnhancedBlockchainIntegration,  # Use the enhanced version
     }
     
     handlers = {}
@@ -138,12 +140,23 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str):
         if category_name in config["categories"]:
             category_config = config["categories"][category_name]
             prompt_file = os.path.join(base_prompts_dir, f"{category_name}.md")
-            handlers[category_name] = category_class(
-                ai_client=ai_client,
-                prompt_file=prompt_file,
-                max_points=category_config.get("max_points", 10),
-                repo_path=repo_path
-            )
+            # Check if this is an enhanced category that requires a branch parameter
+            if category_class in [EnhancedCodeQuality, EnhancedBlockchainIntegration]:
+                handlers[category_name] = category_class(
+                    ai_client=ai_client,
+                    prompt_file=prompt_file,
+                    max_points=category_config.get("max_points", 10),
+                    repo_path=repo_path,
+                    branch=branch
+                )
+            else:
+                # Use original instantiation for non-enhanced categories
+                handlers[category_name] = category_class(
+                    ai_client=ai_client,
+                    prompt_file=prompt_file,
+                    max_points=category_config.get("max_points", 10),
+                    repo_path=repo_path
+                )
     
     return handlers
 
@@ -169,8 +182,8 @@ def main():
     repo_provider = RepoProvider(repo_path=args.repo, branch=args.branch)
     repo_files = repo_provider.get_files()
     
-    # Get category handlers
-    category_handlers = get_category_handlers(config, ai_client, args.repo)
+    # Get category handlers with branch info
+    category_handlers = get_category_handlers(config, ai_client, args.repo, args.branch)
     
     # Process each category
     results = {}
