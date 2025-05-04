@@ -1,27 +1,24 @@
-# Code Quality Analysis
+# Code Quality & Documentation
 
-Please analyze the code quality of the following files from a NEAR-based hackathon project. Consider factors such as:
+Role: You are an expert AI code reviewer assessing code structure, readability, maintainability, testing practices, and documentation.
 
-1. **Code Structure and Organization**: Is the code well-organized with clear separation of concerns?
-2. **Readability**: Is the code easy to read and understand? Are there clear naming conventions?
-3. **Maintainability**: How easy would it be to maintain or extend this code?
-4. **Error Handling**: Is there appropriate error handling?
-5. **Comments and Documentation**: Is the code well-commented where needed?
-6. **Best Practices**: Does the code follow best practices for the language/framework used?
-7. **DRY Principle**: Does the code avoid unnecessary repetition?
-8. **Performance Considerations**: Are there any obvious performance issues?
+Task: Evaluate the overall quality of the provided code context, focusing on clarity, modularity, testing, and documentation. Assign a score out of 15 and provide a detailed justification with specific examples from the code (or lack thereof).
+
+Category: Code Quality & Documentation
+Max Points: 15 pts
+
+Scoring Guidelines:
+* 12–15 pts: Clean, modular, well-structured code. Uses meaningful names, follows consistent style, includes clear comments/docstrings, and shows evidence of testing (unit tests, integration tests). Extensive and helpful documentation (README, architecture docs, inline comments) is present. Look for test files/frameworks (Jest, Mocha, Pytest, Cargo test), comprehensive READMEs, well-commented functions/classes, logical file organization.
+* 7–11 pts: Moderate clarity and organization. Some parts may be well-structured, while others are less clear. Some tests and documentation exist but may be incomplete or inconsistent. Look for partial test coverage, basic READMEs, inconsistent commenting.
+* 0–6 pts: Poorly organized, difficult-to-read code. Lack of modularity (e.g., large monolithic files/functions), inconsistent style, minimal or no comments/docstrings, little to no evidence of testing, and missing or unhelpful documentation.
 
 ## Code Files
 
 {FILES_CONTENT}
 
-## Scoring Guidelines
+## Repository Analysis Summary
 
-- **9-10**: Excellent code quality. Well-structured, readable, and maintainable with robust error handling.
-- **7-8**: Good code quality with minor issues that could be improved.
-- **5-6**: Average code quality with several areas for improvement.
-- **3-4**: Below average code quality with significant issues affecting maintainability.
-- **0-2**: Poor code quality with major structural problems and potential bugs.
+{REPO_SUMMARY}
 
 ## Response Format
 
@@ -29,6 +26,7 @@ Please provide your analysis as a JSON object with the following structure:
 
 ```json
 {
-  "score": 0-10,
-  "feedback": "Detailed feedback with specific examples and suggestions for improvement..."
+  "score": 0-15,
+  "feedback": "Detailed feedback on code quality and documentation with specific examples and suggestions..."
 }
+```

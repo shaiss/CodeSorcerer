@@ -21,7 +21,11 @@ from audit_near.categories.functionality import Functionality
 from audit_near.categories.innovation import Innovation
 from audit_near.categories.security import Security
 from audit_near.categories.ux_design import UXDesign
+# Import enhanced category processors
+from audit_near.categories.enhanced_blockchain_integration import EnhancedBlockchainIntegration
+from audit_near.categories.enhanced_code_quality import EnhancedCodeQuality
 from audit_near.providers.repo_provider import RepoProvider
+from audit_near.providers.repo_analyzer import RepoAnalyzer
 from audit_near.reporters.markdown_reporter import MarkdownReporter
 
 
