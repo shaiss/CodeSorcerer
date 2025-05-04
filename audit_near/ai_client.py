@@ -95,36 +95,95 @@ class AiClient:
             if response_format:
                 kwargs["response_format"] = response_format
             
-            self.logger.debug(f"Calling OpenAI API with model {model}")
+            # Debug logging for prompt size and content
+            prompt_size = len(prompt)
+            preview_length = min(100, len(prompt))
+            prompt_preview = prompt[:preview_length] + ("..." if len(prompt) > preview_length else "")
+            
+            self.logger.info(f"Calling OpenAI API with model {model}")
+            self.logger.info(f"Prompt size: {prompt_size} characters")
+            self.logger.info(f"Prompt preview: {prompt_preview}")
+            
+            # Check if we have code in the prompt
+            code_indicators = ["```", "def ", "class ", "function", "import ", "from ", "<script", "<template", "contract ", "fn "]
+            has_code = any(indicator in prompt for indicator in code_indicators)
+            if has_code:
+                self.logger.info("Prompt contains code snippets")
+            else:
+                self.logger.warning("WARNING: Prompt does not appear to contain code snippets!")
+                self.logger.warning("This may lead to 'no code provided' responses from OpenAI")
+            
+            # Log if prompt is very short
+            if prompt_size < 1000:
+                self.logger.warning(f"WARNING: Prompt is very short ({prompt_size} chars), may not contain enough context")
+            
+            # Save the full prompt to a file for debugging if it's unusually problematic
+            if not has_code or prompt_size < 500:
+                debug_file = f"debug_prompt_{model.replace('.', '_').replace('-', '_')}.txt"
+                try:
+                    with open(debug_file, "w") as f:
+                        f.write("SYSTEM PROMPT:\n")
+                        f.write(system_prompt or "None")
+                        f.write("\n\nUSER PROMPT:\n")
+                        f.write(prompt)
+                    self.logger.info(f"Saved problematic prompt to {debug_file} for debugging")
+                except Exception as e:
+                    self.logger.warning(f"Could not save debug prompt: {e}")
             
             response = self.client.chat.completions.create(**kwargs)
             
             content = response.choices[0].message.content
             
+            # Log response info
+            response_size = len(content)
+            response_preview = content[:100] + ("..." if len(content) > 100 else "")
+            self.logger.info(f"Received response: {response_size} characters")
+            self.logger.info(f"Response preview: {response_preview}")
+            
             try:
                 # Try to parse as JSON
-                return json.loads(content)
+                result = json.loads(content)
+                self.logger.info("Response parsed as valid JSON")
+                return result
             except json.JSONDecodeError:
+                self.logger.warning("Response is not valid JSON, trying alternative parsing methods")
                 # If not valid JSON, look for JSON object in the response
                 try:
                     import re
                     json_match = re.search(r'```json\n(.*?)```', content, re.DOTALL)
                     if json_match:
-                        return json.loads(json_match.group(1))
+                        result = json.loads(json_match.group(1))
+                        self.logger.info("Extracted and parsed JSON from markdown code block")
+                        return result
                     
                     # Try finding JSON without markdown code blocks
                     json_match = re.search(r'({[\s\S]*})', content)
                     if json_match:
-                        return json.loads(json_match.group(1))
+                        result = json.loads(json_match.group(1))
+                        self.logger.info("Extracted and parsed JSON from content")
+                        return result
                         
                     # If we still can't parse it, return as text
+                    self.logger.warning("Could not parse response as JSON, returning as text")
                     return {"feedback": content, "score": 0}
-                except Exception:
+                except Exception as e:
                     # If all parsing attempts fail, just return the raw text
+                    self.logger.warning(f"Error during alternate JSON parsing: {e}")
                     return {"feedback": content, "score": 0}
                 
         except Exception as e:
             self.logger.error(f"Error calling OpenAI API: {e}")
+            
+            # More detailed error reporting
+            if "maximum context length" in str(e).lower():
+                self.logger.error("ERROR: Exceeded maximum context length!")
+                self.logger.error(f"Prompt size: {len(prompt)} characters")
+                self.logger.error(f"This error occurs when the prompt is too large for the model's context window.")
+                self.logger.error(f"Try reducing the number of files or using a smaller subset of the code.")
+            elif "rate limit" in str(e).lower():
+                self.logger.error("ERROR: Hit OpenAI rate limits!")
+                self.logger.error("Consider using a higher-tier API key or adding delays between requests.")
+            
             raise
     
     def analyze_code_quality(self, prompt: str) -> Dict:

@@ -160,15 +160,44 @@ class RepoProvider(BaseProvider):
         """
         self.logger.info(f"Traversing repository: {self.repo_path}")
         
+        # Track statistics for debugging
+        stats = {
+            "total_files_found": 0,
+            "files_skipped": {
+                "excluded": 0,
+                "binary": 0,
+                "large": 0,
+                "error": 0
+            },
+            "files_included": 0
+        }
+        
+        # Track file types
+        included_extensions = {}
+        excluded_extensions = {}
+        
         for root, dirs, files in os.walk(self.repo_path):
             # Filter out excluded directories
-            dirs[:] = [d for d in dirs if not self._is_excluded(os.path.join(root, d))]
+            excluded_dirs = []
+            for d in list(dirs):
+                dir_path = os.path.join(root, d)
+                if self._is_excluded(dir_path):
+                    excluded_dirs.append(d)
+                    dirs.remove(d)
+            
+            if excluded_dirs:
+                self.logger.debug(f"Excluded directories in {root}: {excluded_dirs}")
             
             for file in files:
                 file_path = os.path.join(root, file)
+                stats["total_files_found"] += 1
                 
                 # Skip excluded files
                 if self._is_excluded(file_path):
+                    stats["files_skipped"]["excluded"] += 1
+                    _, ext = os.path.splitext(file)
+                    ext = ext.lower()
+                    excluded_extensions[ext] = excluded_extensions.get(ext, 0) + 1
                     continue
                 
                 # Get relative path
@@ -176,11 +205,76 @@ class RepoProvider(BaseProvider):
                 
                 self.logger.debug(f"Processing file: {rel_path}")
                 
+                # Get file extension
+                _, ext = os.path.splitext(file)
+                ext = ext.lower()
+                
+                # Check file size
+                try:
+                    file_size = os.path.getsize(file_path)
+                    if file_size > 1024 * 1024:  # Skip files > 1MB
+                        self.logger.debug(f"Skipping large file {file_path} ({file_size} bytes)")
+                        stats["files_skipped"]["large"] += 1
+                        excluded_extensions[ext] = excluded_extensions.get(ext, 0) + 1
+                        continue
+                except Exception as e:
+                    self.logger.warning(f"Error checking file size for {file_path}: {e}")
+                    stats["files_skipped"]["error"] += 1
+                    continue
+                
                 # Get file content
                 content = self._get_file_content(file_path)
                 
                 # Skip if content is None (binary file)
                 if content is None:
+                    stats["files_skipped"]["binary"] += 1
+                    excluded_extensions[ext] = excluded_extensions.get(ext, 0) + 1
                     continue
                 
+                # Update statistics
+                stats["files_included"] += 1
+                included_extensions[ext] = included_extensions.get(ext, 0) + 1
+                
                 yield rel_path, content
+        
+        # Log summary statistics
+        self.logger.info(f"Repository traversal complete:")
+        self.logger.info(f"  Total files found: {stats['total_files_found']}")
+        self.logger.info(f"  Files included: {stats['files_included']}")
+        self.logger.info(f"  Files excluded: {sum(stats['files_skipped'].values())}")
+        self.logger.info(f"    - Excluded by patterns: {stats['files_skipped']['excluded']}")
+        self.logger.info(f"    - Binary files: {stats['files_skipped']['binary']}")
+        self.logger.info(f"    - Large files: {stats['files_skipped']['large']}")
+        self.logger.info(f"    - Error reading: {stats['files_skipped']['error']}")
+        
+        # Log file extensions
+        if included_extensions:
+            self.logger.info("Included file extensions:")
+            for ext, count in sorted(included_extensions.items(), key=lambda x: x[1], reverse=True):
+                self.logger.info(f"  {ext}: {count}")
+        
+        if excluded_extensions:
+            self.logger.debug("Excluded file extensions:")
+            for ext, count in sorted(excluded_extensions.items(), key=lambda x: x[1], reverse=True)[:10]:
+                self.logger.debug(f"  {ext}: {count}")
+                
+        # Sanity check - if we didn't include any files, log a warning
+        if stats["files_included"] == 0:
+            self.logger.warning("!!!!! WARNING: No files were included from the repository !!!!!")
+            self.logger.warning(f"Repository path: {self.repo_path}")
+            self.logger.warning(f"Does this path exist and contain source code files?")
+            self.logger.warning(f"Total files found: {stats['total_files_found']}")
+            # List the root directory to help debug
+            try:
+                if os.path.exists(self.repo_path) and os.path.isdir(self.repo_path):
+                    self.logger.warning(f"Contents of root directory:")
+                    for item in os.listdir(self.repo_path):
+                        item_path = os.path.join(self.repo_path, item)
+                        if os.path.isdir(item_path):
+                            self.logger.warning(f"  DIR: {item}")
+                        else:
+                            self.logger.warning(f"  FILE: {item}")
+                else:
+                    self.logger.warning(f"Repository path does not exist or is not a directory!")
+            except Exception as e:
+                self.logger.warning(f"Error listing repository directory: {e}")

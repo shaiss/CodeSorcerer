@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Debug Repository - NEAR Hackathon Auditor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2>Repository Debug Information</h2>
+                </div>
+                <div class="card-body">
+                    <h4>Repository Path: <code>{{ repo_path }}</code></h4>
+                    
+                    <div class="alert alert-info">
+                        This page provides detailed information about the repository and helps diagnose issues with the audit process.
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5>Statistics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Total Files:</th>
+                                            <td>{{ repo_stats.total_files }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Code Files:</th>
+                                            <td>{{ repo_stats.code_files }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Documentation Files:</th>
+                                            <td>{{ repo_stats.doc_files }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Other Files:</th>
+                                            <td>{{ repo_stats.other_files }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5>File Types</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% for ext, count in repo_stats.file_types.items() %}
+                                        <div class="col-md-3 mb-2">
+                                            <span class="badge bg-primary">{{ ext }} ({{ count }})</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5>Directory Structure</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                {% for dir in repo_stats.directories %}
+                                <li class="list-group-item">{{ dir }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5>Sample Code Files</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if code_samples %}
+                                <div class="accordion" id="codeSamplesAccordion">
+                                    {% for sample in code_samples %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                            <button class="accordion-button collapsed" type="button" 
+                                                    data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" 
+                                                    aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                                                {{ sample.path }}
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" 
+                                             aria-labelledby="heading{{ loop.index }}" data-bs-parent="#codeSamplesAccordion">
+                                            <div class="accordion-body">
+                                                <pre><code>{{ sample.content }}</code></pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    No code samples found in the repository.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('audit') }}" class="btn btn-secondary me-2">Back to Audit Form</a>
+                        {% if repo_path %}
+                        <a href="{{ url_for('run_audit') }}" class="btn btn-primary">Run Audit with This Repository</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

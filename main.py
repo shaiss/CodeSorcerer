@@ -234,6 +234,111 @@ def get_repository_stats(repo_path):
     
     return stats
 
+@app.route('/validate-repository')
+def validate_repository_endpoint():
+    """API endpoint to validate a repository path."""
+    repo_path = request.args.get('path')
+    
+    if not repo_path:
+        return jsonify({
+            'valid': False,
+            'message': 'Repository path is required'
+        })
+    
+    # Expand path if it contains a tilde
+    if '~' in repo_path:
+        repo_path = os.path.expanduser(repo_path)
+    
+    # Convert to absolute path if it's relative
+    if not os.path.isabs(repo_path):
+        repo_path = os.path.abspath(repo_path)
+    
+    # Validate repository
+    is_valid, message = validate_repository_path(repo_path)
+    
+    if is_valid:
+        # Get repository stats
+        stats = get_repository_stats(repo_path)
+        return jsonify({
+            'valid': True,
+            'message': message,
+            'stats': stats
+        })
+    else:
+        return jsonify({
+            'valid': False,
+            'message': message
+        })
+
+@app.route('/repository-structure')
+def repository_structure_endpoint():
+    """API endpoint to get the directory structure of a repository."""
+    repo_path = request.args.get('path')
+    
+    if not repo_path:
+        return jsonify({
+            'error': 'Repository path is required'
+        })
+    
+    # Expand and convert path
+    if '~' in repo_path:
+        repo_path = os.path.expanduser(repo_path)
+    if not os.path.isabs(repo_path):
+        repo_path = os.path.abspath(repo_path)
+    
+    # Check if path exists
+    if not os.path.isdir(repo_path):
+        return jsonify({
+            'error': f'Directory does not exist: {repo_path}'
+        })
+    
+    # Get directories
+    try:
+        directories = []
+        for item in os.listdir(repo_path):
+            if os.path.isdir(os.path.join(repo_path, item)) and not item.startswith('.'):
+                directories.append(item)
+        
+        return jsonify({
+            'directories': sorted(directories)
+        })
+    except Exception as e:
+        return jsonify({
+            'error': f'Error getting directory structure: {str(e)}'
+        })
+
+@app.route('/directory-contents')
+def directory_contents_endpoint():
+    """API endpoint to get the contents of a directory."""
+    path = request.args.get('path', '/')
+    
+    # For security, we'll limit this to just returning directories, not files
+    try:
+        if path == '/':
+            # For root, just return some common top-level directories
+            directories = ['home', 'var', 'opt', 'usr', 'tmp', 'mnt', 'etc']
+        else:
+            # For any other path, check if it exists first
+            if not os.path.isdir(path):
+                return jsonify({
+                    'error': f'Directory does not exist: {path}'
+                })
+            
+            # List directories only (not files)
+            directories = []
+            for item in os.listdir(path):
+                item_path = os.path.join(path, item)
+                if os.path.isdir(item_path) and not item.startswith('.'):
+                    directories.append(item)
+        
+        return jsonify({
+            'directories': sorted(directories)
+        })
+    except Exception as e:
+        return jsonify({
+            'error': f'Error getting directory contents: {str(e)}'
+        })
+
 @app.route('/debug-repository')
 def debug_repository():
     """Debug repository files and structure."""
