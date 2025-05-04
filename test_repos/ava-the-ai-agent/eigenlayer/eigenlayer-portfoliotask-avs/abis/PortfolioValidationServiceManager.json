@@ -1,0 +1,108 @@
+{
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "address[]",
+                    "name": "tokens",
+                    "type": "address[]"
+                },
+                {
+                    "internalType": "uint256[]",
+                    "name": "amounts",
+                    "type": "uint256[]"
+                },
+                {
+                    "internalType": "string",
+                    "name": "strategy",
+                    "type": "string"
+                },
+                {
+                    "internalType": "enum ValidationStrategy",
+                    "name": "validationType",
+                    "type": "uint8"
+                }
+            ],
+            "name": "createPortfolioTask",
+            "outputs": [
+                {
+                    "internalType": "uint32",
+                    "name": "",
+                    "type": "uint32"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint32",
+                    "name": "taskId",
+                    "type": "uint32"
+                }
+            ],
+            "name": "getTaskValidations",
+            "outputs": [
+                {
+                    "internalType": "address[]",
+                    "name": "operators",
+                    "type": "address[]"
+                },
+                {
+                    "internalType": "bytes[]",
+                    "name": "validations",
+                    "type": "bytes[]"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "tokenAddress",
+                    "type": "address"
+                }
+            ],
+            "name": "tokenRegistry",
+            "outputs": [
+                {
+                    "components": [
+                        {
+                            "internalType": "string",
+                            "name": "chain",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "tokenAddress",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint32",
+                            "name": "createdBlock",
+                            "type": "uint32"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "isEligible",
+                            "type": "bool"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "metadata",
+                            "type": "string"
+                        }
+                    ],
+                    "internalType": "struct TokenData",
+                    "name": "",
+                    "type": "tuple"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
+}

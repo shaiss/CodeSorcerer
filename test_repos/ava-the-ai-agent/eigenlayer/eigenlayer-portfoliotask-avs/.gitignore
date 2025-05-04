@@ -1,0 +1,33 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore built output
+dist/
+
+# Ignore environment-specific files
+.env
+
+# Ignore nixos related environment-specific files
+.envrc
+.cargo/
+.direnv/
+
+# Ignore editor-specific files
+.vscode/
+.idea/
+
+# Ignore TypeScript build artifacts
+dist/**/*.js
+dist/*.js.map
+dist/*.d.ts
+
+# Ignore local anvil state
+# utils/anvil/*.json
+
+oldUtils
+
+target/
+debug/
+
+yarn.lock
+contracts/deployments/

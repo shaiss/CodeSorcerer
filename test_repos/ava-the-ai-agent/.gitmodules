@@ -1,0 +1,3 @@
+[submodule "server/server/src/atoma-agents"]
+	path = server/server/src/atoma-agents
+	url = https://github.com/atoma-network/atoma-agents

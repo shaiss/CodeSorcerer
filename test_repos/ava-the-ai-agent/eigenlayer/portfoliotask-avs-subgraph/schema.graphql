@@ -1,0 +1,29 @@
+type Portfolio @entity(immutable: false) {
+  id: Bytes!
+  taskId: BigInt!
+  tokens: [Token!]!
+  amounts: [BigInt!]!
+  strategy: String!
+  validationType: Int!
+  status: Int!
+  createdAt: BigInt!
+  validations: [Validation!]! @derivedFrom(field: "portfolio")
+}
+
+type Token @entity(immutable: false) {
+  id: Bytes!
+  chain: String!
+  address: Bytes!
+  isEligible: Boolean!
+  metadata: String
+  createdBlock: BigInt!
+  portfolios: [Portfolio!]! @derivedFrom(field: "tokens")
+}
+
+type Validation @entity(immutable: false) {
+  id: Bytes!
+  portfolio: Portfolio!
+  operator: Bytes!
+  validation: Bytes!
+  timestamp: BigInt!
+}

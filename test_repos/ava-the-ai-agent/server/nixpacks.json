@@ -1,0 +1,16 @@
+{
+  "phases": {
+    "setup": {
+      "nixPkgs": ["bun"]
+    },
+    "install": {
+      "cmds": ["bun i"]
+    },
+    "build": {
+      "cmds": ["bun run build"]
+    }
+  },
+  "start": {
+    "cmd": "bun run start"
+  }
+}

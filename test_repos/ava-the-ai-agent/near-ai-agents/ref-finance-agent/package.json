@@ -1,0 +1,44 @@
+{
+  "name": "ref-finance-agent",
+  "version": "0.1.0",
+  "description": "A2A-compatible Ref Finance Agent for the NEAR Protocol",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "lint": "eslint 'src/**/*.{js,ts}'",
+    "format": "prettier --write 'src/**/*.{js,ts}'"
+  },
+  "keywords": [
+    "NEAR",
+    "DeFi",
+    "Ref Finance",
+    "A2A",
+    "Agent",
+    "AI"
+  ],
+  "author": "Ava Portfolio Manager",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "bignumber.js": "^9.1.2",
+    "events": "^3.3.0",
+    "near-api-js": "^2.1.4",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.10",
+    "@types/node": "^20.9.4",
+    "@types/uuid": "^9.0.7",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "eslint": "^8.54.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.1.0",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
+  }
+}

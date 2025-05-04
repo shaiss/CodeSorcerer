@@ -1,0 +1,21 @@
+{
+  "name": "Ava Portfolio AI Agent",
+  "short_name": "Ava",
+  "description": "Ava the AI Agents",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000033",
+  "theme_color": "#000033",
+  "icons": [
+    {
+      "src": "/brian-ai-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brian-ai-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

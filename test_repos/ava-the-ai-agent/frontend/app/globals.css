@@ -1,0 +1,356 @@
+/* eslint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 240 29% 8%;
+  --foreground: 0 0% 100%;
+  --primary: 330 100% 70%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 250 100% 70%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 185 100% 60%;
+  --accent-foreground: 0 0% 100%;
+  --border: 0 0% 100% 0.1;
+  --ring: 330 100% 70% 0.5;
+  --radius: 0.5rem;
+
+  /* Additional variables for your dark theme */
+  --card: 240 29% 8%;
+  --card-foreground: 0 0% 100%;
+  --popover: 240 29% 8%;
+  --popover-foreground: 0 0% 100%;
+  --muted: 240 4% 46%;
+  --muted-foreground: 240 5% 84%;
+  --input: 240 4% 16%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+}
+
+@layer base {
+  body {
+    @apply bg-black text-white min-h-screen antialiased;
+  }
+
+  p {
+    @apply leading-[1.8] mb-1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply leading-[1.6] mb-2;
+  }
+
+  input,
+  textarea {
+    @apply bg-white/5 border border-white/10 rounded-lg px-4 py-3 
+           focus:outline-none focus:ring-2 focus:ring-neon-pink/50 focus:border-neon-pink/50
+           placeholder:text-gray-400 text-white transition-all duration-200
+           leading-[1.8];
+  }
+
+  section {
+    scroll-margin-top: 5rem;
+  }
+
+  .text-container {
+    @apply py-1;
+  }
+
+  /* Global Styles */
+  ::selection {
+    @apply bg-neon-pink/30 text-white;
+  }
+
+  :focus {
+    @apply outline-none ring-2 ring-neon-pink/50;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-black/20 backdrop-blur-lg rounded-lg border border-white/10;
+  }
+
+  .button-gradient {
+    @apply bg-gradient-to-r from-electric-purple to-neon-pink text-white rounded-lg;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-electric-purple to-neon-pink;
+  }
+
+  .gradient-link {
+    background: linear-gradient(to right, #ff1cf7, #b249f8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: opacity 0.3s ease;
+  }
+
+  .gradient-link:hover {
+    opacity: 0.8;
+  }
+
+  .button-gradient {
+    @apply bg-gradient-to-r from-neon-pink to-electric-purple 
+           hover:from-aqua-blue hover:to-neon-green 
+           transition-all duration-300 rounded-lg
+           shadow-lg shadow-neon-pink/20 hover:shadow-aqua-blue/30
+           transform hover:scale-[1.02] active:scale-[0.98]
+           text-white font-semibold;
+  }
+
+  .nav-link {
+    @apply text-gray-300 hover:text-white transition-colors duration-200
+           relative after:absolute after:bottom-0 after:left-0 after:h-[2px]
+           after:w-0 hover:after:w-full after:bg-gradient-to-r after:from-neon-pink 
+           after:to-electric-purple after:transition-all after:duration-300;
+  }
+
+  .section-divider {
+    @apply w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-8;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: linear-gradient(
+      to bottom,
+      var(--neon-pink),
+      var(--electric-purple)
+    );
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, var(--aqua-blue), var(--neon-green));
+  }
+
+  /* Animations */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in-delay {
+    animation: fade-in 0.6s ease-out 0.2s forwards;
+    opacity: 0;
+  }
+
+  .animate-fade-in-delay-2 {
+    animation: fade-in 0.6s ease-out 0.4s forwards;
+    opacity: 0;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float 6s ease-in-out 2s infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 4s ease-in-out infinite;
+  }
+
+  /* Background Patterns */
+  .bg-grid-pattern {
+    background-image: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.1) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  /* Gradient Animations */
+  @keyframes border-rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes gradient-x {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient-x {
+    background-size: 200% 100%;
+    animation: gradient-x 15s ease infinite;
+  }
+
+  /* Glow Effects */
+  .glow-purple-md {
+    text-shadow: 0 0 15px rgba(149, 76, 233, 0.5);
+  }
+
+  .glow-purple-sm {
+    text-shadow: 0 0 10px rgba(149, 76, 233, 0.3);
+  }
+
+  .glow-pink-sm {
+    text-shadow: 0 0 10px rgba(255, 28, 247, 0.3);
+  }
+
+  .glow-green-sm {
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+  }
+
+  .glow-blue-sm {
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Shadow Effects */
+  .shadow-neon {
+    box-shadow: 0 0 20px rgba(149, 76, 233, 0.5);
+  }
+
+  .shadow-neon-sm {
+    box-shadow: 0 0 15px rgba(255, 28, 247, 0.1);
+  }
+
+  .drop-shadow-glow {
+    filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.3));
+  }
+
+  /* Gradient Border */
+  .gradient-border {
+    @apply relative;
+    &::before {
+      content: "";
+      @apply absolute inset-0 rounded-lg -z-10;
+      background: linear-gradient(
+        45deg,
+        var(--neon-pink),
+        var(--electric-purple)
+      );
+      animation: border-rotate 4s linear infinite;
+    }
+  }
+
+  /* Mobile Optimizations */
+  @media (max-width: 768px) {
+    /* Only add styles that aren't already covered by existing responsive classes */
+    .glass-card {
+      @apply py-4 px-4; /* Smaller padding on mobile */
+    }
+
+    /* Adjust base font sizes for better mobile readability */
+    html {
+      font-size: 15px; /* Slightly smaller base font size on mobile */
+    }
+
+    /* Adjust input/textarea padding for mobile */
+    input,
+    textarea {
+      @apply px-3 py-2;
+    }
+
+    /* Adjust animation distances for mobile */
+    @keyframes float {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px); /* Reduced float distance on mobile */
+      }
+    }
+
+    /* Adjust grid pattern for mobile */
+    .bg-grid-pattern {
+      background-size: 20px 20px; /* Smaller grid pattern on mobile */
+    }
+  }
+
+  /* Add a utility class for responsive text that works across all devices */
+  .responsive-text {
+    font-size: clamp(0.875rem, 3vw, 1rem);
+    line-height: 1.5;
+  }
+
+  .h-screen-safe {
+    height: calc(100vh - theme('spacing.32')); /* 32 = 16 (navbar) + 16 (footer) */
+  }
+  
+  .max-h-screen-safe {
+    max-height: calc(100vh - theme('spacing.32'));
+  }
+}
+
+/* Deck-specific styles */
+html.deck-view,
+html.deck-view body {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+/* Optional: Add any global styles here */
+body {
+  @apply bg-black text-white;
+}
