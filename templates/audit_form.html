@@ -118,7 +118,7 @@
                             <select class="form-select" id="bundle" name="bundle">
                                 <option value="">-- Custom Configuration --</option>
                                 {% for bundle in available_bundles %}
-                                <option value="{{ bundle.id }}" data-categories="{{ bundle.categories|tojson }}">{{ bundle.name }} - {{ bundle.description }}</option>
+                                <option value="{{ bundle.id }}" data-categories='{{ bundle.categories|tojson }}'>{{ bundle.name }} - {{ bundle.description }}</option>
                                 {% endfor %}
                             </select>
                             <div class="form-text">Bundles are predefined sets of categories optimized for specific use cases</div>
