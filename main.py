@@ -228,7 +228,10 @@ def audit():
                                 metadata = registry.get_metadata(category_id)
                                 max_points = 10
                                 if metadata:
-                                    max_points = metadata.get("max_points", 10)
+                                    # Get max_points from config section
+                                    config = metadata.get("config", {})
+                                    max_points = config.get("max_points", 10)
+                                    logger.info(f"Bundle category {category_id} max points: {max_points}")
                                 else:
                                     # Default points for standard categories
                                     if category_id == "code_quality":
@@ -249,7 +252,10 @@ def audit():
                 metadata = registry.get_metadata(category_id)
                 max_points = 10
                 if metadata:
-                    max_points = metadata.get("max_points", 10)
+                    # Get max_points from config section
+                    config = metadata.get("config", {})
+                    max_points = config.get("max_points", 10)
+                    logger.info(f"Selected category {category_id} max points: {max_points}")
                 else:
                     # Default points for standard categories
                     if category_id == "code_quality":

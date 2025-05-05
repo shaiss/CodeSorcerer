@@ -10,7 +10,7 @@ requires = []
 
 [config]
 max_points = 15
-prompt_file = "innovation.md"
+prompt_file = "md_prompts/innovation.md"
 enhanced = false
 
 [patterns]

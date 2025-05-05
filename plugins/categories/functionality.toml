@@ -10,7 +10,7 @@ requires = []
 
 [config]
 max_points = 15
-prompt_file = "functionality.md"
+prompt_file = "md_prompts/functionality.md"
 enhanced = false
 
 [patterns]

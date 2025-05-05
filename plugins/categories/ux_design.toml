@@ -10,7 +10,7 @@ requires = []
 
 [config]
 max_points = 15
-prompt_file = "ux_design.md"
+prompt_file = "md_prompts/ux_design.md"
 enhanced = false
 
 [patterns]
