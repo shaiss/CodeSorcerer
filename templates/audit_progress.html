@@ -253,15 +253,56 @@
             }
         });
         
-        // Get containers for categories
-        const completedContainer = document.querySelector('.category-list .row .col-md-6:nth-child(1) ul');
-        if (completedContainer) {
-            completedContainer.id = 'completed-categories';
+        // Get containers for categories - critically important for displaying category progress!
+        // Using more specific selectors to ensure we find the correct elements
+        const completedCategoriesCol = document.querySelector('.category-list .row .col-md-6:nth-child(1)');
+        if (completedCategoriesCol) {
+            // First try to find existing ul
+            let completedContainer = completedCategoriesCol.querySelector('ul');
+            
+            // If no ul exists yet, create one and add it to the DOM
+            if (!completedContainer) {
+                completedContainer = document.createElement('ul');
+                completedContainer.className = 'list-group';
+                completedContainer.id = 'completed-categories';
+                
+                // Find the empty message and insert the list before it
+                const emptyMsg = completedCategoriesCol.querySelector('#completed-categories-empty');
+                if (emptyMsg) {
+                    emptyMsg.parentNode.insertBefore(completedContainer, emptyMsg);
+                } else {
+                    // If no empty message, append to the column
+                    completedCategoriesCol.appendChild(completedContainer);
+                }
+            } else {
+                // Ensure the existing ul has the right ID
+                completedContainer.id = 'completed-categories';
+            }
         }
         
-        const pendingContainer = document.querySelector('.category-list .row .col-md-6:nth-child(2) ul');
-        if (pendingContainer) {
-            pendingContainer.id = 'pending-categories';
+        const pendingCategoriesCol = document.querySelector('.category-list .row .col-md-6:nth-child(2)');
+        if (pendingCategoriesCol) {
+            // First try to find existing ul
+            let pendingContainer = pendingCategoriesCol.querySelector('ul');
+            
+            // If no ul exists yet, create one and add it to the DOM
+            if (!pendingContainer) {
+                pendingContainer = document.createElement('ul');
+                pendingContainer.className = 'list-group';
+                pendingContainer.id = 'pending-categories';
+                
+                // Find the empty message and insert the list before it
+                const emptyMsg = pendingCategoriesCol.querySelector('#pending-categories-empty');
+                if (emptyMsg) {
+                    emptyMsg.parentNode.insertBefore(pendingContainer, emptyMsg);
+                } else {
+                    // If no empty message, append to the column
+                    pendingCategoriesCol.appendChild(pendingContainer);
+                }
+            } else {
+                // Ensure the existing ul has the right ID
+                pendingContainer.id = 'pending-categories';
+            }
         }
         
         // Start polling for updates
