@@ -1,0 +1,20 @@
+# Functionality Plugin
+
+[metadata]
+id = "functionality"
+name = "Functionality & Features"
+version = "1.0.0"
+description = "Evaluates feature completeness, correctness, error handling, and how well the application solves user problems"
+author = "Code Sorcerer"
+requires = []
+
+[config]
+max_points = 15
+prompt_file = "functionality.md"
+enhanced = false
+
+[patterns]
+# Include source code files from common languages, focusing on application code
+include = ["\\.js$", "\\.jsx$", "\\.ts$", "\\.tsx$", "\\.py$", "\\.rs$", "\\.sol$", "\\.go$", "\\.java$", "\\.c$", "\\.cpp$", "\\.cs$", "index\\.", "main\\.", "app\\.", "server\\.", "api\\."]
+# Exclude test files, build artifacts, and dependencies
+exclude = ["node_modules", "dist", "build", "target", "venv", "__pycache__", "test", "spec", "mock", "\\.min\\.js$", "\\.bundle\\.js$"]
