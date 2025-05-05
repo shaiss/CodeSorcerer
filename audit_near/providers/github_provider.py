@@ -209,18 +209,20 @@ def get_repository_branches(repo_path):
         logger.error(f"Error getting repository branches: {e}", exc_info=True)
         return []
 
-def download_github_repo(url, branch='main'):
+def download_github_repo(url, branch='main', fetch_all_branches=True):
     """
     Download a GitHub repository to a temporary directory.
     
     Args:
         url (str): GitHub repository URL
         branch (str): Branch to clone (default: main)
+        fetch_all_branches (bool): Whether to fetch all branches or only the specified branch
+                                  Use True for validation, False for actual auditing
         
     Returns:
         str: Path to the temporary directory containing the repository
     """
-    logger.info(f"Downloading GitHub repository: {url}, branch: {branch}")
+    logger.info(f"Downloading GitHub repository: {url}, branch: {branch}, fetch_all_branches: {fetch_all_branches}")
     
     # Extract repo name for better directory naming
     repo_name = extract_repo_name_from_url(url)
@@ -255,18 +257,59 @@ def download_github_repo(url, branch='main'):
                 url = f"{url}.git"
                 
             logger.info(f"Using GitHub URL: {url}")
-            
-        # Clone with depth=1 to speed up cloning for large repositories
-        # but ensure we get all branches for proper branch selection
-        logger.info(f"Cloning repository to {temp_dir}...")
-        repo = Repo.clone_from(
-            url, 
-            temp_dir, 
-            branch=branch, 
-            depth=1,  # Only get the latest commit, but of all branches
-            env={"GIT_TERMINAL_PROMPT": "0"}  # Disable Git prompting for credentials
-        )
+        
+        # Set up clone options
+        clone_options = {
+            'url': url,
+            'to_path': temp_dir,
+            'branch': branch,
+            'depth': 1,  # Only get the latest commit
+            'env': {"GIT_TERMINAL_PROMPT": "0"}  # Disable Git prompting for credentials
+        }
+        
+        # For actual auditing (not validation), only get the specific branch
+        if not fetch_all_branches:
+            clone_options['single_branch'] = True
+        
+        # Clone the repository
+        logger.info(f"Cloning repository to {temp_dir} with options: {clone_options}")
+        repo = Repo.clone_from(**clone_options)
+        
         logger.info(f"Repository cloned successfully, HEAD is at: {repo.head.commit.hexsha}")
+        
+        # Extra step for validation: If we're fetching all branches, also do a direct fetch
+        # This helps get branch information that might not be available from the initial shallow clone
+        if fetch_all_branches:
+            try:
+                import subprocess
+                logger.info("Fetching additional branch information...")
+                subprocess.run(
+                    ['git', 'remote', 'set-branches', 'origin', '*'],  # Configure git to fetch all remote branches
+                    cwd=temp_dir, 
+                    check=True,
+                    capture_output=True
+                )
+                
+                subprocess.run(
+                    ['git', 'fetch', '--depth=1', '--all'],  # Fetch all branches but still with depth=1
+                    cwd=temp_dir, 
+                    check=True,
+                    capture_output=True
+                )
+                
+                # Log branch info for debugging
+                result = subprocess.run(
+                    ['git', 'branch', '-a'],
+                    cwd=temp_dir,
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+                if result.stdout:
+                    logger.info(f"Available branches after fetch: {result.stdout}")
+            except Exception as fetch_error:
+                logger.warning(f"Error during additional branch fetching: {fetch_error}")
+                # Continue even if this fails, as we still have the main clone
         
         return temp_dir
     except Exception as e:

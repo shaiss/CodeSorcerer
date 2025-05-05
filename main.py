@@ -108,7 +108,8 @@ def audit():
                 
                 # Download the repository
                 logger.info(f"Downloading GitHub repository: {repo_path}, branch: {branch}")
-                temp_repo_path = download_github_repo(repo_path, branch)
+                # For actual auditing, we only need the specified branch
+                temp_repo_path = download_github_repo(repo_path, branch, fetch_all_branches=False)
                 
                 # Set session variables
                 session['is_github_repo'] = True
@@ -303,7 +304,8 @@ def validate_repository_endpoint():
             # Actually download the repository to get stats
             logger.info(f"Downloading GitHub repository for validation: {repo_path}")
             branch = request.args.get('branch', 'main')
-            temp_repo_path = download_github_repo(repo_path, branch)
+            # For validation, we want to fetch all branches to show them in the dropdown
+            temp_repo_path = download_github_repo(repo_path, branch, fetch_all_branches=True)
             
             # Get repository statistics from the downloaded repo
             repo_stats = get_repository_stats(temp_repo_path)
