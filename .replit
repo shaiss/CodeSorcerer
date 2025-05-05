@@ -2,7 +2,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["awsebcli", "openssl", "postgresql"]
+packages = ["awsebcli", "cargo", "libiconv", "libyaml", "openssl", "postgresql", "rustc"]
 
 [deployment]
 deploymentTarget = "autoscale"

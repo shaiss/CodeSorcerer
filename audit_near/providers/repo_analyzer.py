@@ -14,6 +14,7 @@ from audit_near.providers.file_categorizer import FileCategorizer
 from audit_near.providers.dependency_analyzer import DependencyAnalyzer
 from audit_near.providers.git_analyzer import GitAnalyzer
 from audit_near.providers.boilerplate_detector import BoilerplateDetector
+from audit_near.providers.ast_analyzer import ASTAnalyzer
 
 
 class RepoAnalyzer:
@@ -42,6 +43,7 @@ class RepoAnalyzer:
         self.dependency_analyzer = DependencyAnalyzer()
         self.git_analyzer = GitAnalyzer(repo_path=self.repo_path)
         self.boilerplate_detector = BoilerplateDetector()
+        self.ast_analyzer = ASTAnalyzer()
         
         self.logger.info(f"Initialized repository analyzer for {self.repo_path}")
     
@@ -81,11 +83,16 @@ class RepoAnalyzer:
         dependency_analysis = self.dependency_analyzer.analyze_dependencies(files)
         self.logger.info("Completed dependency analysis")
         
+        # Perform AST analysis on supported files
+        ast_analysis = self.ast_analyzer.analyze_files(files)
+        self.logger.info("Completed AST analysis")
+        
         # Combine results
         results = {
             'file_count': len(files),
             'git_analysis': git_analysis,
             'boilerplate_analysis': boilerplate_analysis,
+            'ast_analysis': ast_analysis,
             'categorized_files': {
                 category: [file_path for file_path, _ in category_files]
                 for category, category_files in categorized_files.items()
@@ -182,7 +189,8 @@ class RepoAnalyzer:
                            git_analysis: Dict[str, Any],
                            boilerplate_analysis: Dict[str, Any],
                            categorized_files: Dict[str, List[Tuple[str, str]]],
-                           dependency_analysis: Dict[str, Any]) -> Dict[str, Any]:
+                           dependency_analysis: Dict[str, Any],
+                           ast_analysis: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Create an overall summary of the repository.
         
@@ -231,6 +239,22 @@ class RepoAnalyzer:
             'custom_code_percentage': custom_code_percentage,
             'third_party_technologies': boilerplate_analysis.get('third_party_summary', {}),
         }
+        
+        # Add AST analysis metrics if available
+        if ast_analysis:
+            summary['code_metrics'] = {
+                'function_count': ast_analysis.get('function_count', 0),
+                'class_count': ast_analysis.get('class_count', 0),
+                'avg_function_complexity': ast_analysis.get('avg_function_complexity', 0),
+                'max_function_complexity': ast_analysis.get('max_function_complexity', 0),
+                'architectural_patterns': ast_analysis.get('architectural_patterns', []),
+                'has_error_handling': ast_analysis.get('has_error_handling', False),
+            }
+            
+            # Add language-specific metrics
+            language_specific = ast_analysis.get('language_specific', {})
+            if language_specific:
+                summary['language_metrics'] = language_specific
         
         # Add git metrics if available
         git_summary = git_analysis.get('summary', {})
