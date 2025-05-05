@@ -46,7 +46,7 @@ exclude = ["test", "mock"]
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `max_points` | integer | Maximum number of points for this category (1-10) |
+| `max_points` | integer | Maximum number of points for this category (1-100). Recommended: 5-25 based on category importance |
 | `prompt_file` | string | Path to the prompt template file (relative to plugin file) |
 
 ## Optional Fields
@@ -118,6 +118,6 @@ Provide your assessment in the following JSON format:
 
 1. Plugin ID must be unique across all plugins
 2. Plugin ID must be lowercase with underscores
-3. Max points must be between 1 and 10
+3. Max points must be a positive integer between 1 and 100
 4. Prompt file must exist and be accessible
 5. Include/exclude patterns must be valid regex

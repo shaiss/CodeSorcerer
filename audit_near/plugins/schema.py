@@ -89,9 +89,9 @@ def validate_plugin_config(
         # Validate max_points range
         if "max_points" in config["config"]:
             max_points = config["config"]["max_points"]
-            if not isinstance(max_points, int) or max_points < 1 or max_points > 10:
+            if not isinstance(max_points, int) or max_points < 1 or max_points > 100:
                 errors.append(
-                    f"Invalid max_points: {max_points}. Must be between 1 and 10."
+                    f"Invalid max_points: {max_points}. Must be a positive integer between 1 and 100."
                 )
         
         # Validate prompt file exists
