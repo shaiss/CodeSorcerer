@@ -442,12 +442,20 @@
             <p class="mt-2">${validatingMsg}</p>
         `;
         
+        // Set a timeout for large repositories
+        const timeoutSeconds = 60; // 1 minute timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutSeconds * 1000);
+        
         // Make an AJAX call to validate the repository
         fetch('/validate-repository?path=' + encodeURIComponent(repoPath) + 
              '&is_github=' + isGithubUrl + 
-             '&branch=' + encodeURIComponent(branch))
+             '&branch=' + encodeURIComponent(branch), {
+                signal: controller.signal
+             })
             .then(response => response.json())
             .then(data => {
+                clearTimeout(timeoutId); // Clear the timeout
                 document.getElementById('validationSpinner').style.display = 'none';
                 document.getElementById('validationContent').style.display = 'block';
                 

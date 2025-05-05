@@ -436,6 +436,8 @@ def validate_repository_endpoint():
     """API endpoint to validate a repository path."""
     repo_path = request.args.get('path')
     is_github_param = request.args.get('is_github', 'false').lower() == 'true'
+    # Added timeout to prevent worker process hanging
+    timeout_seconds = 30
     
     if not repo_path:
         return jsonify({
