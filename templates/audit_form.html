@@ -31,16 +31,34 @@
             <div class="card-body">
                 <form method="post" action="{{ url_for('audit') }}">
                     <div class="mb-3">
-                        <label for="repo_path" class="form-label">Repository Path</label>
+                        <label for="repo_path" class="form-label">Repository Path or GitHub URL</label>
                         <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-code-square" id="inputTypeIcon"></i>
+                            </span>
                             <input type="text" class="form-control" id="repo_path" name="repo_path" 
-                                   placeholder="e.g., /path/to/repository" required>
+                                   placeholder="e.g., /path/to/repository or https://github.com/username/repo" required>
                             <button class="btn btn-outline-secondary" type="button" 
-                                    data-bs-toggle="modal" data-bs-target="#fileExplorerModal">
+                                    data-bs-toggle="modal" data-bs-target="#fileExplorerModal" id="browseButton">
                                 Browse
                             </button>
                         </div>
-                        <div class="form-text">The absolute path to a local repository to audit</div>
+                        <div class="form-text" id="repoPathHelp">
+                            You can enter either a local repository path or a GitHub repository URL.
+                            <span class="badge bg-info ms-1">New!</span>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="radio" name="repoType" id="localRepoType" value="local" checked>
+                            <label class="form-check-label" for="localRepoType">
+                                Local Repository
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="repoType" id="githubRepoType" value="github">
+                            <label class="form-check-label" for="githubRepoType">
+                                GitHub Repository URL
+                            </label>
+                        </div>
                     </div>
                     
                     {% if sample_repos %}
@@ -132,15 +150,15 @@
                     <div id="fileTypes"></div>
                     
                     <div class="mt-3">
-                        <button class="btn btn-sm btn-outline-primary" type="button" onclick="viewDirectoryStructure()">
+                        <button class="btn btn-sm btn-outline-primary local-repo-only" type="button" onclick="viewDirectoryStructure()">
                             View Directory Structure
                         </button>
-                        <a id="debugRepoBtn" href="/debug-repository" class="btn btn-sm btn-outline-secondary ms-2">
+                        <a id="debugRepoBtn" href="/debug-repository" class="btn btn-sm btn-outline-secondary ms-2 local-repo-only">
                             Detailed Debug Info
                         </a>
                     </div>
                     
-                    <div id="directoryStructure" class="mt-3" style="display: none;">
+                    <div id="directoryStructure" class="mt-3 local-repo-only" style="display: none;">
                         <h4>Directory Structure</h4>
                         <div id="dirList" class="list-group file-list"></div>
                     </div>
@@ -177,6 +195,58 @@
 
 {% block scripts %}
 <script>
+    // Initialize repository type toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up event listeners for repo type radio buttons
+        document.getElementById('localRepoType').addEventListener('change', updateRepoTypeUI);
+        document.getElementById('githubRepoType').addEventListener('change', updateRepoTypeUI);
+        
+        // Initial UI setup
+        updateRepoTypeUI();
+        
+        // Also detect GitHub URLs automatically
+        document.getElementById('repo_path').addEventListener('input', detectRepoType);
+    });
+    
+    // Update UI based on selected repository type
+    function updateRepoTypeUI() {
+        const isLocal = document.getElementById('localRepoType').checked;
+        const repoPath = document.getElementById('repo_path');
+        const browseButton = document.getElementById('browseButton');
+        const inputTypeIcon = document.getElementById('inputTypeIcon');
+        const repoPathHelp = document.getElementById('repoPathHelp');
+        
+        if (isLocal) {
+            // Local repository mode
+            repoPath.placeholder = 'e.g., /path/to/repository';
+            browseButton.style.display = '';
+            inputTypeIcon.className = 'bi bi-folder';
+            repoPathHelp.innerHTML = 'Enter the absolute path to a local repository to audit.';
+        } else {
+            // GitHub repository mode
+            repoPath.placeholder = 'e.g., https://github.com/username/repo';
+            browseButton.style.display = 'none';
+            inputTypeIcon.className = 'bi bi-github';
+            repoPathHelp.innerHTML = 'Enter a GitHub repository URL (https://github.com/username/repo). <span class="badge bg-info ms-1">New!</span>';
+        }
+    }
+    
+    // Auto-detect repository type based on input
+    function detectRepoType() {
+        const repoPath = document.getElementById('repo_path').value.trim();
+        const githubPattern = /^https?:\/\/github\.com\/[\w-]+\/[\w.-]+\/?(?:\.git)?$/;
+        
+        if (githubPattern.test(repoPath) || repoPath.startsWith('git@github.com:')) {
+            // This looks like a GitHub URL, select GitHub mode
+            document.getElementById('githubRepoType').checked = true;
+            updateRepoTypeUI();
+        } else if (repoPath.startsWith('/') || repoPath.includes(':\\') || repoPath.startsWith('~')) {
+            // This looks like a file path, select local mode
+            document.getElementById('localRepoType').checked = true;
+            updateRepoTypeUI();
+        }
+    }
+    
     // Sample repository selection
     function selectSampleRepo() {
         const select = document.getElementById('sample_repo');
@@ -184,6 +254,9 @@
         
         if (select.value) {
             repoPath.value = select.value;
+            // Select local repo type since samples are local
+            document.getElementById('localRepoType').checked = true;
+            updateRepoTypeUI();
             // Auto-validate when selecting a sample repo
             validateRepository();
         }
@@ -194,7 +267,7 @@
         const repoPath = document.getElementById('repo_path').value;
         
         if (!repoPath) {
-            alert('Please enter a repository path');
+            alert('Please enter a repository path or GitHub URL');
             return;
         }
         
@@ -212,14 +285,38 @@
                 
                 if (data.valid) {
                     document.getElementById('validationStatus').className = 'alert alert-success mb-3';
-                    document.getElementById('validationStatus').innerHTML = 
-                        '<strong>Success!</strong> ' + data.message;
                     
-                    // Populate stats
-                    document.getElementById('totalFiles').textContent = data.stats.total_files;
-                    document.getElementById('codeFiles').textContent = data.stats.code_files;
-                    document.getElementById('docFiles').textContent = data.stats.doc_files;
-                    document.getElementById('otherFiles').textContent = data.stats.other_files;
+                    if (data.is_github_url) {
+                        // GitHub repository
+                        document.getElementById('validationStatus').innerHTML = 
+                            '<strong>Success!</strong> ' + data.message;
+                        
+                        // Display GitHub-specific info
+                        document.getElementById('totalFiles').textContent = data.stats.total_files;
+                        document.getElementById('codeFiles').textContent = data.stats.code_files;
+                        document.getElementById('docFiles').textContent = data.stats.doc_files;
+                        document.getElementById('otherFiles').textContent = data.stats.other_files;
+                        
+                        // Disable directory structure and debug buttons for GitHub repos
+                        document.querySelectorAll('.local-repo-only').forEach(el => {
+                            el.style.display = 'none';
+                        });
+                    } else {
+                        // Local repository
+                        document.getElementById('validationStatus').innerHTML = 
+                            '<strong>Success!</strong> ' + data.message;
+                        
+                        // Populate stats
+                        document.getElementById('totalFiles').textContent = data.stats.total_files;
+                        document.getElementById('codeFiles').textContent = data.stats.code_files;
+                        document.getElementById('docFiles').textContent = data.stats.doc_files;
+                        document.getElementById('otherFiles').textContent = data.stats.other_files;
+                        
+                        // Re-enable local repo specific elements
+                        document.querySelectorAll('.local-repo-only').forEach(el => {
+                            el.style.display = '';
+                        });
+                    }
                     
                     // Populate file types
                     const fileTypesDiv = document.getElementById('fileTypes');
