@@ -17,16 +17,6 @@ except ImportError:
     import tomli as tomllib  # Before Python 3.11
 
 from audit_near.ai_client import AiClient
-from audit_near.categories.blockchain_integration import BlockchainIntegration
-from audit_near.categories.code_quality import CodeQuality
-from audit_near.categories.documentation import Documentation
-from audit_near.categories.functionality import Functionality
-from audit_near.categories.innovation import Innovation
-from audit_near.categories.security import Security
-from audit_near.categories.ux_design import UXDesign
-# Import enhanced category processors
-from audit_near.categories.enhanced_blockchain_integration import EnhancedBlockchainIntegration
-from audit_near.categories.enhanced_code_quality import EnhancedCodeQuality
 from audit_near.providers.repo_provider import RepoProvider
 from audit_near.providers.repo_analyzer import RepoAnalyzer
 from audit_near.reporters.markdown_reporter import MarkdownReporter

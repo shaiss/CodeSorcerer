@@ -133,63 +133,27 @@
                                         <div class="card-header bg-light">Assessment Categories</div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <!-- Default Categories (left column) -->
-                                                <div class="col-md-6">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="categories" value="code_quality" id="cat_code_quality" checked>
-                                                        <label class="form-check-label" for="cat_code_quality">
-                                                            Code Quality (20 pts)
-                                                            <i class="bi bi-info-circle" title="Evaluates code structure, readability, maintainability, testing practices, and documentation"></i>
-                                                        </label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="categories" value="functionality" id="cat_functionality" checked>
-                                                        <label class="form-check-label" for="cat_functionality">
-                                                            Functionality (15 pts)
-                                                            <i class="bi bi-info-circle" title="Evaluates feature completeness, correctness, error handling, and how well the application solves user problems"></i>
-                                                        </label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="categories" value="security" id="cat_security" checked>
-                                                        <label class="form-check-label" for="cat_security">
-                                                            Security (20 pts)
-                                                            <i class="bi bi-info-circle" title="Evaluates code for security vulnerabilities, input validation, authentication mechanisms, and protection against common attacks"></i>
-                                                        </label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="categories" value="documentation" id="cat_documentation" checked>
-                                                        <label class="form-check-label" for="cat_documentation">
-                                                            Documentation (15 pts)
-                                                            <i class="bi bi-info-circle" title="Evaluates quality of project documentation, code comments, and ease of understanding for new developers"></i>
-                                                        </label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="categories" value="innovation" id="cat_innovation" checked>
-                                                        <label class="form-check-label" for="cat_innovation">
-                                                            Innovation (10 pts)
-                                                            <i class="bi bi-info-circle" title="Evaluates project novelty, technical innovation, market potential, and creative use of blockchain technology"></i>
-                                                        </label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="categories" value="ux_design" id="cat_ux_design" checked>
-                                                        <label class="form-check-label" for="cat_ux_design">
-                                                            UX Design (10 pts)
-                                                            <i class="bi bi-info-circle" title="Evaluates user interface design, usability, accessibility, and overall user experience"></i>
-                                                        </label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="categories" value="blockchain_integration" id="cat_blockchain_integration" checked>
-                                                        <label class="form-check-label" for="cat_blockchain_integration">
-                                                            Blockchain Integration (10 pts)
-                                                            <i class="bi bi-info-circle" title="Evaluates the quality of blockchain integration, including smart contract implementation, wallet connections, and NEAR Protocol feature usage"></i>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Additional Categories (right column) -->
+                                                <!-- Assessment Categories -->
                                                 {% if available_categories %}
                                                 <div class="col-md-6">
                                                     {% for category in available_categories %}
+                                                    {% if loop.index <= (available_categories|length / 2)|round(0, 'ceil') %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="categories" value="{{ category.id }}" id="cat_{{ category.id }}" 
+                                                        {% if category.id in ['code_quality', 'functionality', 'security', 'documentation', 'innovation', 'ux_design', 'blockchain_integration'] %}checked{% endif %}>
+                                                        <label class="form-check-label" for="cat_{{ category.id }}">
+                                                            {{ category.name }} ({{ category.max_points }} pts)
+                                                            {% if category.description %}
+                                                            <i class="bi bi-info-circle" title="{{ category.description }}"></i>
+                                                            {% endif %}
+                                                        </label>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    {% for category in available_categories %}
+                                                    {% if loop.index > (available_categories|length / 2)|round(0, 'ceil') %}
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" name="categories" value="{{ category.id }}" id="cat_{{ category.id }}">
                                                         <label class="form-check-label" for="cat_{{ category.id }}">
@@ -199,11 +163,16 @@
                                                             {% endif %}
                                                         </label>
                                                     </div>
+                                                    {% endif %}
                                                     {% endfor %}
                                                     
                                                     <div class="text-center mt-3">
-                                                        <span class="badge bg-primary">{{ plugin_count }} Assessment Categories Available</span>
+                                                        <span class="badge bg-primary">{{ available_categories|length }} Assessment Categories Available</span>
                                                     </div>
+                                                </div>
+                                                {% else %}
+                                                <div class="col-12 text-center">
+                                                    <p>No assessment categories available. Please check your plugin configuration.</p>
                                                 </div>
                                                 {% endif %}
                                             </div>
