@@ -96,20 +96,21 @@ def audit():
                 # Get branch name from form
                 branch = request.form.get('branch', 'main')
                 
+                # Extract repo name for display purposes before downloading
+                repo_name = extract_repo_name_from_url(repo_path)
+                
                 # Download the repository
                 logger.info(f"Downloading GitHub repository: {repo_path}, branch: {branch}")
                 temp_repo_path = download_github_repo(repo_path, branch)
                 
-                # Extract repo name for display purposes
-                repo_name = extract_repo_name_from_url(repo_path)
-                
                 # Set session variables
                 session['is_github_repo'] = True
                 session['github_url'] = repo_path
-                session['repo_name'] = repo_name
+                session['repo_name'] = repo_name  # Important: store the actual repo name
+                session['original_repo_name'] = repo_name  # Keep the original name
                 repo_path = temp_repo_path
                 
-                logger.info(f"GitHub repository downloaded to: {repo_path}")
+                logger.info(f"GitHub repository '{repo_name}' downloaded to: {repo_path}")
                 flash(f"GitHub repository '{repo_name}' downloaded successfully.", 'success')
                 
             except Exception as e:
@@ -127,6 +128,9 @@ def audit():
             # Convert to absolute path if it's relative
             if not os.path.isabs(repo_path):
                 repo_path = os.path.abspath(repo_path)
+            
+            # Use the repository name as the repo_name 
+            session['repo_name'] = os.path.basename(repo_path)
         
         # Enhanced validation of repository path
         validation_result, validation_message = validate_repository_path(repo_path)
@@ -275,6 +279,7 @@ def get_repository_stats(repo_path):
 def validate_repository_endpoint():
     """API endpoint to validate a repository path."""
     repo_path = request.args.get('path')
+    is_github_param = request.args.get('is_github', 'false').lower() == 'true'
     
     if not repo_path:
         return jsonify({
@@ -282,8 +287,8 @@ def validate_repository_endpoint():
             'message': 'Repository path or GitHub URL is required'
         })
     
-    # Check if it's a GitHub URL
-    if is_github_url(repo_path):
+    # Check if it's a GitHub URL (either from parameter or by detecting URL)
+    if is_github_param or is_github_url(repo_path):
         return jsonify({
             'valid': True,
             'is_github_url': True,
@@ -416,6 +421,7 @@ class AuditProgress:
     id: str
     repo_path: str
     branch: str
+    repo_name: Optional[str] = None  # Store original repo name for GitHub repositories
     steps: Dict[str, int] = field(default_factory=lambda: {
         "repo_validation": 0,
         "file_gathering": 0,
@@ -754,8 +760,23 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
         with open(temp_report_path, 'r') as f:
             report_content = f.read()
         
-        # Save to database
-        repo_name = os.path.basename(repo_path)
+        # Save to database with the correct repository name
+        # For GitHub repositories, we want to use the original repo name, not the temp folder name
+        repo_name = progress.repo_name if hasattr(progress, 'repo_name') else None
+        
+        if not repo_name:
+            # If it wasn't set in the progress, try getting it from session
+            try:
+                with app.app_context():
+                    repo_name = session.get('original_repo_name') or session.get('repo_name')
+            except:
+                # Fall back to basename if session access fails
+                pass
+                
+        if not repo_name:
+            # Last resort fallback
+            repo_name = os.path.basename(repo_path)
+            
         new_report = AuditReport(
             repo_name=repo_name,
             repo_path=repo_path,

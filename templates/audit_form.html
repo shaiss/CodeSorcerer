@@ -265,6 +265,7 @@
     // Repository validation
     function validateRepository() {
         const repoPath = document.getElementById('repo_path').value;
+        const isGithubUrl = document.getElementById('githubRepoType').checked;
         
         if (!repoPath) {
             alert('Please enter a repository path or GitHub URL');
@@ -277,7 +278,7 @@
         document.getElementById('validationContent').style.display = 'none';
         
         // Make an AJAX call to validate the repository
-        fetch('/validate-repository?path=' + encodeURIComponent(repoPath))
+        fetch('/validate-repository?path=' + encodeURIComponent(repoPath) + '&is_github=' + isGithubUrl)
             .then(response => response.json())
             .then(data => {
                 document.getElementById('validationSpinner').style.display = 'none';

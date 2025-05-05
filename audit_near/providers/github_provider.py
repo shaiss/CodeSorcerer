@@ -54,8 +54,15 @@ def download_github_repo(url, branch='main'):
     """
     logger.info(f"Downloading GitHub repository: {url}, branch: {branch}")
     
-    # Create a temporary directory
-    temp_dir = tempfile.mkdtemp(prefix="audit_near_")
+    # Extract repo name for better directory naming
+    repo_name = extract_repo_name_from_url(url)
+    
+    # Add timestamp to make unique folders for multiple audits of the same repo
+    import datetime
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Create a temporary directory with repo name and timestamp
+    temp_dir = tempfile.mkdtemp(prefix=f"audit_near_{repo_name}_{timestamp}_")
     logger.info(f"Created temporary directory: {temp_dir}")
     
     try:
