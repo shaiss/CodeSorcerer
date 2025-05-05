@@ -7,7 +7,7 @@ analysis techniques to provide a holistic view of a repository.
 
 import logging
 import os
-from typing import Dict, List, Set, Tuple, Any
+from typing import Dict, List, Set, Tuple, Any, Optional, Union
 
 from audit_near.providers.repo_provider import RepoProvider
 from audit_near.providers.file_categorizer import FileCategorizer
@@ -113,7 +113,8 @@ class RepoAnalyzer:
             results['file_summaries'][category] = self._create_file_summary(
                 category_files, 
                 dependency_analysis, 
-                boilerplate_analysis
+                boilerplate_analysis,
+                ast_analysis
             )
         
         # Create overall repository summary
@@ -122,7 +123,8 @@ class RepoAnalyzer:
             git_analysis, 
             boilerplate_analysis, 
             categorized_files, 
-            dependency_analysis
+            dependency_analysis,
+            ast_analysis
         )
         
         self.logger.info("Repository analysis completed")
@@ -131,7 +133,8 @@ class RepoAnalyzer:
     def _create_file_summary(self, 
                             category_files: List[Tuple[str, str]], 
                             dependency_analysis: Dict[str, Any],
-                            boilerplate_analysis: Dict[str, Any]) -> Dict[str, Any]:
+                            boilerplate_analysis: Dict[str, Any],
+                            ast_analysis: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Create a summary of files for a category.
         
@@ -139,6 +142,7 @@ class RepoAnalyzer:
             category_files: List of (file_path, file_content) tuples for the category
             dependency_analysis: Dependency analysis results
             boilerplate_analysis: Boilerplate analysis results
+            ast_analysis: AST analysis results (default: None)
             
         Returns:
             Dictionary with file summary
@@ -176,13 +180,64 @@ class RepoAnalyzer:
                 technologies.append(f"Framework: {framework_name}")
         
         # Create the summary
-        return {
+        summary = {
             'file_count': len(category_files),
             'important_files': [path for path, _ in sorted_files[:10]],  # Top 10 most important files
             'classifications': classification_counts,
             'custom_percentage': classification_counts['custom'] / len(category_files) if category_files else 0,
             'technologies': technologies,
         }
+        
+        # Add AST analysis data for this category if available
+        if ast_analysis:
+            # Filter AST data just for this category's files
+            category_ast_data = {}
+            
+            # Collect function and class names for all files in this category
+            category_functions = []
+            category_classes = []
+            category_patterns = set()
+            category_complexity = 0
+            category_function_count = 0
+            complexity_samples = 0
+            
+            for file_path, _ in category_files:
+                # Use file paths to filter relevant data
+                for language, lang_data in ast_analysis.get('language_specific', {}).items():
+                    # For language-specific stats
+                    if language not in category_ast_data:
+                        category_ast_data[language] = {
+                            'function_count': 0,
+                            'class_count': 0,
+                            'has_error_handling': False
+                        }
+                    
+                    category_ast_data[language]['has_error_handling'] |= ast_analysis.get('has_error_handling', False)
+                
+                # Collect function and class names that were found
+                category_functions.extend(ast_analysis.get('function_names', []))
+                category_classes.extend(ast_analysis.get('class_names', []))
+                
+                # Collect architectural patterns
+                category_patterns.update(ast_analysis.get('architectural_patterns', []))
+                
+                # Sum up complexity
+                if 'function_count' in ast_analysis and ast_analysis['function_count'] > 0:
+                    category_function_count += ast_analysis.get('function_count', 0)
+                    category_complexity += ast_analysis.get('total_complexity', 0)
+                    complexity_samples += 1
+            
+            # Add the category-specific metrics
+            if category_function_count > 0:
+                summary['code_metrics'] = {
+                    'function_count': category_function_count,
+                    'class_count': len(category_classes),
+                    'avg_complexity': category_complexity / category_function_count if category_function_count > 0 else 0,
+                    'architectural_patterns': list(category_patterns),
+                    'language_breakdown': category_ast_data
+                }
+        
+        return summary
     
     def _create_repo_summary(self, 
                            files: List[Tuple[str, str]],
@@ -190,7 +245,7 @@ class RepoAnalyzer:
                            boilerplate_analysis: Dict[str, Any],
                            categorized_files: Dict[str, List[Tuple[str, str]]],
                            dependency_analysis: Dict[str, Any],
-                           ast_analysis: Dict[str, Any] = None) -> Dict[str, Any]:
+                           ast_analysis: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Create an overall summary of the repository.
         
@@ -200,6 +255,7 @@ class RepoAnalyzer:
             boilerplate_analysis: Boilerplate analysis results
             categorized_files: Categorized files
             dependency_analysis: Dependency analysis results
+            ast_analysis: AST analysis results (default: None)
             
         Returns:
             Dictionary with repository summary
