@@ -2,9 +2,9 @@
 
 [metadata]
 id = "code_quality"
-name = "Code Quality & Documentation"
+name = "Code Quality"
 version = "1.0.0"
-description = "Evaluates code structure, readability, maintainability, testing practices, and documentation"
+description = "Evaluates code structure, readability, maintainability, and testing practices."
 author = "Code Sorcerer"
 requires = []
 

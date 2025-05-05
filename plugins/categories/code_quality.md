@@ -1,4 +1,4 @@
-# Code Quality & Documentation
+# Code Quality
 
 ## Repository Overview
 
@@ -10,7 +10,7 @@
 
 ## Evaluation Criteria
 
-You are an expert AI code reviewer assessing code structure, readability, maintainability, testing practices, and documentation.
+You are an expert AI code reviewer assessing code structure, readability, maintainability, and testing practices.
 
 Evaluate the overall quality of the provided code, focusing on:
 
