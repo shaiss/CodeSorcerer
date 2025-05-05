@@ -41,6 +41,64 @@ def is_github_url(url):
     
     return any(re.match(pattern, url) for pattern in github_patterns)
 
+def get_repository_branches(repo_path):
+    """
+    Get list of branches from a git repository with metadata.
+    
+    Args:
+        repo_path (str): Path to git repository
+        
+    Returns:
+        list: List of dictionaries containing branch information with keys:
+            - name: Branch name
+            - commit_hash: Latest commit hash
+            - commit_date: Date of the latest commit
+            - is_default: Whether this is the default branch
+    """
+    try:
+        repo = Repo(repo_path)
+        
+        # Get remote reference to determine default branch
+        default_branch = None
+        try:
+            # Get the default branch from origin (usually main or master)
+            for ref in repo.references:
+                if ref.name == 'origin/HEAD':
+                    default_branch = ref.reference.name.replace('origin/', '')
+                    break
+        except Exception:
+            # Fallback if origin/HEAD doesn't exist
+            # Try common default branch names
+            for name in ['main', 'master']:
+                if name in [b.name for b in repo.branches]:
+                    default_branch = name
+                    break
+        
+        # If still no default branch, use the current HEAD
+        if not default_branch and repo.active_branch:
+            default_branch = repo.active_branch.name
+        
+        branches = []
+        # Get all branches
+        for branch in repo.branches:
+            # Get latest commit for the branch
+            commit = next(repo.iter_commits(branch.name, max_count=1))
+            branches.append({
+                'name': branch.name,
+                'commit_hash': commit.hexsha,
+                'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                'commit_message': commit.message.strip().split('\n')[0],  # First line of commit message
+                'is_default': branch.name == default_branch
+            })
+        
+        # Sort branches: default branch first, then alphabetically
+        branches.sort(key=lambda x: (not x['is_default'], x['name']))
+        
+        return branches
+    except Exception as e:
+        logger.error(f"Error getting repository branches: {e}")
+        return []
+
 def download_github_repo(url, branch='main'):
     """
     Download a GitHub repository to a temporary directory.

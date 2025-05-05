@@ -67,7 +67,9 @@ from audit_near.cli import load_config, get_category_handlers
 from audit_near.ai_client import AiClient
 from audit_near.providers.repo_provider import RepoProvider
 from audit_near.providers.repo_analyzer import RepoAnalyzer
-from audit_near.providers.github_provider import is_github_url, download_github_repo, extract_repo_name_from_url
+from audit_near.providers.github_provider import (
+    is_github_url, download_github_repo, extract_repo_name_from_url, get_repository_branches
+)
 from audit_near.reporters.markdown_reporter import MarkdownReporter
 
 @app.route('/')
@@ -301,6 +303,9 @@ def validate_repository_endpoint():
             # Get repository statistics from the downloaded repo
             repo_stats = get_repository_stats(temp_repo_path)
             
+            # Get branch information from the repository
+            branches = get_repository_branches(temp_repo_path)
+            
             # Clean up the temporary repository - we'll download it again during the actual audit
             try:
                 import shutil
@@ -315,7 +320,8 @@ def validate_repository_endpoint():
                 'message': f"Valid GitHub repository URL: {repo_path}",
                 'github_url': repo_path,
                 'repo_name': repo_name,
-                'stats': repo_stats
+                'stats': repo_stats,
+                'branches': branches
             })
         except Exception as e:
             logger.error(f"Error validating GitHub repository: {e}")
@@ -342,11 +348,14 @@ def validate_repository_endpoint():
     if is_valid:
         # Get repository stats
         stats = get_repository_stats(repo_path)
+        # Get branch information for local repositories
+        branches = get_repository_branches(repo_path)
         return jsonify({
             'valid': True,
             'is_github_url': False,
             'message': message,
-            'stats': stats
+            'stats': stats,
+            'branches': branches
         })
     else:
         return jsonify({
