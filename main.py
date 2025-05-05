@@ -1,5 +1,5 @@
 """
-Web interface for the NEAR Hackathon Auditor tool.
+Web interface for the Code Sorcerer tool.
 """
 
 import os

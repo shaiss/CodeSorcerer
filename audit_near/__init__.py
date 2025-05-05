@@ -1,5 +1,5 @@
 """
-Audit-Near - A command-line tool for auditing NEAR-based hackathon projects.
+Code Sorcerer - A comprehensive code auditing and analysis tool.
 
 This package provides functionality to audit local repositories,
 analyze code quality, and generate Markdown scorecards based on
