@@ -311,16 +311,28 @@
     
     // Poll for progress updates
     function startPolling() {
-        // Initial poll immediately
-        pollProgress();
+        // =====================================================================================
+        // CRITICAL FIX: Add a small delay before the first poll to prevent race condition
+        // =====================================================================================
+        // This delay gives the backend enough time to initialize the audit progress object
+        // before the first AJAX request is made, which prevents the "No audit in progress" error
+        // that can occur when the form submits and redirects very quickly.
+        // =====================================================================================
+        updateStatusMessage('Initializing audit progress tracking...');
         
-        // Then poll every 5 seconds
-        const intervalId = setInterval(() => {
+        // Delay the first poll by 800ms to allow backend initialization
+        setTimeout(() => {
+            // Initial poll after delay
             pollProgress();
-        }, 5000);
-        
-        // Store interval ID in case we need to cancel it later
-        window._progressPollingInterval = intervalId;
+            
+            // Then poll every 5 seconds
+            const intervalId = setInterval(() => {
+                pollProgress();
+            }, 5000);
+            
+            // Store interval ID in case we need to cancel it later
+            window._progressPollingInterval = intervalId;
+        }, 800);
     }
     
     // Poll the API for progress updates
