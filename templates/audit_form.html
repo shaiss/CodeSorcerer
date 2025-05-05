@@ -90,15 +90,16 @@
                     </div>
                     {% endif %}
                     
-                    <div class="mb-3">
+                    <!-- Branch selection - initially hidden, shown after validation -->
+                    <div class="mb-3" id="branchSelectionContainer" style="display: none;">
                         <label for="branch" class="form-label">Branch</label>
-                        <!-- Branch input container - will be replaced with dropdown after validation -->
-                        <div id="branchInputContainer">
+                        <!-- Branch input container - hidden after validation -->
+                        <div id="branchInputContainer" style="display: none;">
                             <input type="text" class="form-control" id="branch" name="branch" 
                                    value="main" placeholder="e.g., main, master, develop">
                             <div class="form-text">The branch to audit (usually 'main' or 'master')</div>
                         </div>
-                        <!-- Branch dropdown will appear here after validation -->
+                        <!-- Branch dropdown will appear after validation -->
                         <div id="branchSelectorContainer" style="display: none;">
                             <select class="form-select" id="branchSelector" name="branch">
                                 <!-- Options will be populated dynamically -->
@@ -282,9 +283,13 @@
             return;
         }
         
-        // Reset branch selection to the original input field
-        document.getElementById('branchInputContainer').style.display = 'block';
+        // Reset branch selection UI state
+        document.getElementById('branchSelectionContainer').style.display = 'none';
+        document.getElementById('branchInputContainer').style.display = 'none';
         document.getElementById('branchSelectorContainer').style.display = 'none';
+        
+        // Clear any current validated repo data
+        window.currentValidatedRepo = null;
         
         // Show validation results area and spinner
         document.getElementById('validationResults').style.display = 'block';
@@ -486,9 +491,13 @@
         const currentBranch = document.getElementById('branch').value;
         
         // Get the branch selector container and selector element
+        const branchSelectionContainer = document.getElementById('branchSelectionContainer');
         const branchInputContainer = document.getElementById('branchInputContainer');
         const branchSelectorContainer = document.getElementById('branchSelectorContainer');
         const branchSelector = document.getElementById('branchSelector');
+        
+        // Make the overall branch container visible
+        branchSelectionContainer.style.display = 'block';
         
         // Clear existing options
         branchSelector.innerHTML = '';
@@ -543,15 +552,92 @@
             }
         }
         
+        // Store the repository information globally for revalidation
+        window.currentValidatedRepo = {
+            path: document.getElementById('repo_path').value,
+            isGithub: document.getElementById('githubRepoType').checked
+        };
+        
         // Hide the input container and show the selector
         branchInputContainer.style.display = 'none';
         branchSelectorContainer.style.display = 'block';
         
-        // Add event listener to update hidden input when selection changes
+        // Remove any existing event listeners to prevent duplicates
+        const oldBranchSelector = branchSelector.cloneNode(true);
+        branchSelector.parentNode.replaceChild(oldBranchSelector, branchSelector);
+        branchSelector = document.getElementById('branchSelector');
+        
+        // Add fresh event listener to update hidden input when selection changes
         branchSelector.addEventListener('change', function() {
             // Update the original branch input value to maintain compatibility
-            document.getElementById('branch').value = this.value;
+            const newBranch = this.value;
+            document.getElementById('branch').value = newBranch;
+            
+            // Revalidate the repository with the new branch
+            revalidateWithBranch(newBranch);
         });
+    }
+    
+    // Function to revalidate repository with a new branch
+    function revalidateWithBranch(branchName) {
+        if (!window.currentValidatedRepo) return;
+        
+        const repoPath = window.currentValidatedRepo.path;
+        const isGithubUrl = window.currentValidatedRepo.isGithub;
+        
+        // Show validation spinner with branch checkout message
+        document.getElementById('validationSpinner').style.display = 'block';
+        document.getElementById('validationContent').style.display = 'none';
+        document.getElementById('validationSpinner').innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Checking out branch '${branchName}' and revalidating repository...</p>
+        `;
+        
+        // Make an AJAX call to validate the repository with the new branch
+        fetch('/validate-repository?path=' + encodeURIComponent(repoPath) + 
+             '&is_github=' + isGithubUrl + 
+             '&branch=' + encodeURIComponent(branchName))
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('validationSpinner').style.display = 'none';
+                document.getElementById('validationContent').style.display = 'block';
+                
+                if (data.valid) {
+                    document.getElementById('validationStatus').className = 'alert alert-success mb-3';
+                    document.getElementById('validationStatus').innerHTML = 
+                        `<strong>Success!</strong> Repository validated with branch '${branchName}': ${data.message}`;
+                    
+                    // Update repository statistics
+                    document.getElementById('totalFiles').textContent = data.stats.total_files;
+                    document.getElementById('codeFiles').textContent = data.stats.code_files;
+                    document.getElementById('docFiles').textContent = data.stats.doc_files;
+                    document.getElementById('otherFiles').textContent = data.stats.other_files;
+                    
+                    // Update file types
+                    const fileTypesDiv = document.getElementById('fileTypes');
+                    fileTypesDiv.innerHTML = '';
+                    
+                    Object.entries(data.stats.file_types).forEach(([ext, count]) => {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-primary me-1 mb-1';
+                        badge.textContent = `${ext} (${count})`;
+                        fileTypesDiv.appendChild(badge);
+                    });
+                } else {
+                    document.getElementById('validationStatus').className = 'alert alert-danger mb-3';
+                    document.getElementById('validationStatus').innerHTML = 
+                        `<strong>Error:</strong> Failed to validate with branch '${branchName}': ${data.message}`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('validationSpinner').style.display = 'none';
+                document.getElementById('validationContent').style.display = 'block';
+                document.getElementById('validationStatus').className = 'alert alert-danger mb-3';
+                document.getElementById('validationStatus').innerHTML = 
+                    `<strong>Error:</strong> Failed to validate with branch '${branchName}': ${error}`;
+            });
     }
 </script>
 {% endblock %}
