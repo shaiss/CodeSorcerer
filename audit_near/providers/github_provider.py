@@ -165,25 +165,49 @@ def download_github_repo(url, branch='main'):
     
     # Extract repo name for better directory naming
     repo_name = extract_repo_name_from_url(url)
+    owner = extract_owner_from_url(url)
     
     # Add timestamp to make unique folders for multiple audits of the same repo
     import datetime
+    import random
+    import string
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
     
     # Create a temporary directory with repo name and timestamp
     temp_dir = tempfile.mkdtemp(prefix=f"audit_near_{repo_name}_{timestamp}_")
     logger.info(f"Created temporary directory: {temp_dir}")
     
     try:
-        # Normalize URL to ensure it works with GitPython
+        # Clean URL for public repositories to ensure we can clone without authentication
         if url.endswith('/'):
             url = url[:-1]
-        if not url.endswith('.git') and not url.startswith('git@'):
-            url = f"{url}.git"
         
-        # Clone the repository to the temporary directory
+        # For GitHub URLs specifically, use the HTTPS URL format for public repos
+        if 'github.com' in url:
+            # If ssh format, convert to https
+            if url.startswith('git@'):
+                if owner and repo_name:
+                    url = f"https://github.com/{owner}/{repo_name}"
+                    logger.info(f"Converted SSH URL to HTTPS: {url}")
+            
+            # Ensure URL ends with .git for public repos
+            if not url.endswith('.git'):
+                url = f"{url}.git"
+                
+            logger.info(f"Using GitHub URL: {url}")
+            
+        # Clone with depth=1 to speed up cloning for large repositories
+        # and use a longer timeout to allow for larger repositories
         logger.info(f"Cloning repository to {temp_dir}...")
-        repo = Repo.clone_from(url, temp_dir, branch=branch)
+        repo = Repo.clone_from(
+            url, 
+            temp_dir, 
+            branch=branch, 
+            depth=1,  # Only get the latest commit
+            single_branch=True,  # Only get the specified branch
+            env={"GIT_TERMINAL_PROMPT": "0"}  # Disable Git prompting for credentials
+        )
         logger.info(f"Repository cloned successfully, HEAD is at: {repo.head.commit.hexsha}")
         
         return temp_dir

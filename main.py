@@ -319,7 +319,7 @@ def validate_repository_endpoint():
             except Exception as cleanup_error:
                 logger.error(f"Error cleaning up temp directory: {cleanup_error}")
             
-            return jsonify({
+            response_data = {
                 'valid': True,
                 'is_github_url': True,
                 'message': f"Valid GitHub repository URL: {repo_path}",
@@ -327,9 +327,11 @@ def validate_repository_endpoint():
                 'repo_name': repo_name,
                 'stats': repo_stats,
                 'branches': branches
-            })
+            }
+            
+            return jsonify(response_data)
         except Exception as e:
-            logger.error(f"Error validating GitHub repository: {e}")
+            logger.error(f"Error validating GitHub repository: {e}", exc_info=True)
             return jsonify({
                 'valid': False,
                 'is_github_url': True,
