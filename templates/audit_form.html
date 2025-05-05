@@ -18,6 +18,22 @@
     .directory-item:hover {
         background-color: rgba(0,0,0,0.05);
     }
+    /* Branch selector styling */
+    #branchSelector {
+        font-family: monospace;
+    }
+    #branchSelector option {
+        padding: 8px;
+    }
+    .branch-default {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    .branch-metadata {
+        color: #6c757d;
+        font-size: 0.85em;
+        margin-left: 5px;
+    }
 </style>
 {% endblock %}
 
@@ -76,9 +92,19 @@
                     
                     <div class="mb-3">
                         <label for="branch" class="form-label">Branch</label>
-                        <input type="text" class="form-control" id="branch" name="branch" 
-                               value="main" placeholder="e.g., main, master, develop">
-                        <div class="form-text">The branch to audit (usually 'main' or 'master')</div>
+                        <!-- Branch input container - will be replaced with dropdown after validation -->
+                        <div id="branchInputContainer">
+                            <input type="text" class="form-control" id="branch" name="branch" 
+                                   value="main" placeholder="e.g., main, master, develop">
+                            <div class="form-text">The branch to audit (usually 'main' or 'master')</div>
+                        </div>
+                        <!-- Branch dropdown will appear here after validation -->
+                        <div id="branchSelectorContainer" style="display: none;">
+                            <select class="form-select" id="branchSelector" name="branch">
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                            <div class="form-text">Select a branch to audit from the available branches</div>
+                        </div>
                     </div>
                     
                     <div class="form-text mb-3">
@@ -256,6 +282,10 @@
             return;
         }
         
+        // Reset branch selection to the original input field
+        document.getElementById('branchInputContainer').style.display = 'block';
+        document.getElementById('branchSelectorContainer').style.display = 'none';
+        
         // Show validation results area and spinner
         document.getElementById('validationResults').style.display = 'block';
         document.getElementById('validationSpinner').style.display = 'block';
@@ -326,6 +356,11 @@
                         badge.textContent = `${ext} (${count})`;
                         fileTypesDiv.appendChild(badge);
                     });
+                    
+                    // Update branch selection with data from the API if available
+                    if (data.branches && data.branches.length > 0) {
+                        updateBranchSelector(data.branches);
+                    }
                     
                     // Update debug repo button
                     document.getElementById('debugRepoBtn').href = '/debug-repository';
@@ -442,5 +477,81 @@
     document.getElementById('fileExplorerModal').addEventListener('show.bs.modal', function (event) {
         navigateTo('/');
     });
+    
+    // Function to update branch selector with available branches
+    function updateBranchSelector(branches) {
+        if (!branches || branches.length === 0) return;
+        
+        // Get the current branch value in case we need to preserve it
+        const currentBranch = document.getElementById('branch').value;
+        
+        // Get the branch selector container and selector element
+        const branchInputContainer = document.getElementById('branchInputContainer');
+        const branchSelectorContainer = document.getElementById('branchSelectorContainer');
+        const branchSelector = document.getElementById('branchSelector');
+        
+        // Clear existing options
+        branchSelector.innerHTML = '';
+        
+        // Add options for each branch
+        branches.forEach(branch => {
+            const option = document.createElement('option');
+            option.value = branch.name;
+            
+            // Create a formatted label with branch details
+            let optionText = branch.name;
+            
+            // Add default branch indicator using span with class for styling
+            if (branch.is_default) {
+                option.classList.add('branch-default');
+                optionText += ' (default)';
+            }
+            
+            // Add commit date and message in a formatted way
+            const commitDate = new Date(branch.commit_date);
+            const formattedDate = commitDate.toLocaleDateString();
+            const metadataText = ` - Last commit: ${formattedDate}`;
+            
+            option.textContent = optionText + metadataText;
+            
+            branchSelector.appendChild(option);
+            
+            // Tooltips with commit message
+            if (branch.commit_message) {
+                option.title = `Latest commit: ${branch.commit_message}`;
+            }
+        });
+        
+        // Try to select the current branch if it exists in the list, otherwise select default
+        let branchSelected = false;
+        for (let i = 0; i < branchSelector.options.length; i++) {
+            if (branchSelector.options[i].value === currentBranch) {
+                branchSelector.selectedIndex = i;
+                branchSelected = true;
+                break;
+            }
+        }
+        
+        // If we couldn't find the current branch, select the default branch
+        if (!branchSelected) {
+            for (let i = 0; i < branchSelector.options.length; i++) {
+                const option = branchSelector.options[i];
+                if (option.textContent.includes('(default)')) {
+                    branchSelector.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        // Hide the input container and show the selector
+        branchInputContainer.style.display = 'none';
+        branchSelectorContainer.style.display = 'block';
+        
+        // Add event listener to update hidden input when selection changes
+        branchSelector.addEventListener('change', function() {
+            // Update the original branch input value to maintain compatibility
+            document.getElementById('branch').value = this.value;
+        });
+    }
 </script>
 {% endblock %}
