@@ -62,10 +62,11 @@ def main():
     for category in legacy_categories:
         if category in loaded_plugins:
             metadata = registry.get_metadata(category)
+            
             print(f"✅ {category} successfully migrated")
-            print(f"   Name: {metadata['name']}")
-            print(f"   Description: {metadata['description']}")
-            print(f"   Max Points: {registry.get_config(category).get('max_points', 'Not specified')}")
+            print(f"   Name: {metadata.get('name', 'Not specified')}")
+            print(f"   Description: {metadata.get('description', 'Not specified')}")
+            print(f"   Max Points: {metadata.get('config', {}).get('max_points', 'Not specified')}")
             print()
         else:
             print(f"❌ {category} not found as a plugin")

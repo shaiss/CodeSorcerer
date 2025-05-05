@@ -121,8 +121,13 @@ class CategoryPluginLoader:
             else:
                 category_class = self._create_category_class(plugin_id, config, plugin_dir)
             
+            # Enhance metadata with the full configuration for easier access
+            enhanced_metadata = metadata.copy()
+            enhanced_metadata["config"] = config["config"]
+            enhanced_metadata["patterns"] = config.get("patterns", {})
+            
             # Register the category
-            registry.register(plugin_id, category_class, metadata)
+            registry.register(plugin_id, category_class, enhanced_metadata)
             
             self.logger.info(f"Successfully loaded plugin: {plugin_id}")
             return plugin_id
