@@ -4,7 +4,6 @@
 
 {% block head %}
 {{ super() }}
-<meta http-equiv="refresh" content="5;url={{ url_for('check_audit_progress') }}">
 <style>
     .progress-container {
         padding: 20px;
@@ -52,6 +51,13 @@
     .current-task {
         font-weight: bold;
         margin-top: 15px;
+    }
+    /* Add fade transition for updating elements */
+    .fade-update {
+        transition: opacity 0.3s ease-in-out;
+    }
+    .fade-out {
+        opacity: 0.5;
     }
 </style>
 {% endblock %}
@@ -162,8 +168,8 @@
                             </a>
                         </div>
                         {% else %}
-                        <div class="alert alert-info mt-4">
-                            <i class="bi bi-info-circle"></i> This page will automatically refresh every 5 seconds to show the latest progress.
+                        <div id="refresh-info" class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle"></i> <span id="progress-status">Progress updates will refresh automatically.</span>
                         </div>
                         {% endif %}
                     </div>
@@ -173,4 +179,228 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add ID attributes to elements we'll be updating
+        document.querySelector('.badge.bg-primary').id = 'overall-percentage';
+        document.querySelector('.progress-bar').id = 'progress-bar';
+        document.querySelector('.current-task span').id = 'current-task-text';
+        
+        const steps = ['repo_validation', 'file_gathering', 'code_analysis', 'report_generation'];
+        steps.forEach(step => {
+            // Add IDs to step elements
+            const stepElement = document.querySelector(`.step:nth-child(${steps.indexOf(step) + 2})`);
+            if (stepElement) {
+                stepElement.id = `step-${step}`;
+                stepElement.querySelector('.badge').id = `badge-${step}`;
+                stepElement.querySelector('.step-icon').id = `icon-${step}`;
+            }
+        });
+        
+        // Get containers for categories
+        const completedContainer = document.querySelector('.category-list .row .col-md-6:nth-child(1) ul');
+        if (completedContainer) {
+            completedContainer.id = 'completed-categories';
+        }
+        
+        const pendingContainer = document.querySelector('.category-list .row .col-md-6:nth-child(2) ul');
+        if (pendingContainer) {
+            pendingContainer.id = 'pending-categories';
+        }
+        
+        // Start polling for updates
+        startPolling();
+    });
+    
+    // Poll for progress updates
+    function startPolling() {
+        // Initial poll immediately
+        pollProgress();
+        
+        // Then poll every 5 seconds
+        const intervalId = setInterval(() => {
+            pollProgress();
+        }, 5000);
+        
+        // Store interval ID in case we need to cancel it later
+        window._progressPollingInterval = intervalId;
+    }
+    
+    // Poll the API for progress updates
+    function pollProgress() {
+        updateStatusMessage('Updating progress...');
+        
+        fetch('{{ url_for("api_audit_progress") }}')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update the UI with new data
+                updateProgressUI(data);
+                updateStatusMessage('Progress updated successfully.');
+                
+                // If complete, redirect to report
+                if (data.report_id && data.overall_percentage >= 100) {
+                    updateStatusMessage('Audit complete! Redirecting to report...');
+                    setTimeout(() => {
+                        window.location.href = `{{ url_for('view_report', report_id=0) }}`.replace('/0', `/${data.report_id}`);
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching progress:', error);
+                updateStatusMessage('Error updating progress. Will retry...');
+            });
+    }
+    
+    // Update progress UI with new data
+    function updateProgressUI(data) {
+        // Update overall percentage
+        const overallPercentageElement = document.getElementById('overall-percentage');
+        if (overallPercentageElement) {
+            fadeUpdate(overallPercentageElement, () => {
+                overallPercentageElement.textContent = `${data.overall_percentage}% Complete`;
+            });
+        }
+        
+        // Update progress bar
+        const progressBar = document.getElementById('progress-bar');
+        if (progressBar) {
+            progressBar.style.width = `${data.overall_percentage}%`;
+            progressBar.setAttribute('aria-valuenow', data.overall_percentage);
+        }
+        
+        // Update current task
+        const currentTaskElement = document.getElementById('current-task-text');
+        if (currentTaskElement) {
+            fadeUpdate(currentTaskElement, () => {
+                currentTaskElement.textContent = data.current_task;
+            });
+        }
+        
+        // Update steps
+        const steps = ['repo_validation', 'file_gathering', 'code_analysis', 'report_generation'];
+        steps.forEach(step => {
+            updateStepUI(step, data.steps[step]);
+        });
+        
+        // Update categories
+        updateCategoriesUI(data.categories_completed, data.categories_pending);
+        
+        // Update error message if any
+        if (data.error) {
+            // Create or update error alert
+            let errorAlert = document.querySelector('.alert-danger');
+            if (!errorAlert) {
+                errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-danger';
+                document.querySelector('.card-body').prepend(errorAlert);
+            }
+            errorAlert.innerHTML = `<strong>Error:</strong> ${data.error}`;
+        }
+    }
+    
+    // Update step UI with new data
+    function updateStepUI(stepKey, percentage) {
+        const stepElement = document.getElementById(`step-${stepKey}`);
+        if (!stepElement) return;
+        
+        const badgeElement = document.getElementById(`badge-${stepKey}`);
+        const iconElement = document.getElementById(`icon-${stepKey}`);
+        
+        // Determine new classes for elements
+        const isCompleted = percentage >= 100;
+        const isInProgress = percentage > 0 && percentage < 100;
+        
+        // Update step class
+        stepElement.className = 'step ' + (isCompleted ? 'step-completed' : (isInProgress ? 'step-in-progress' : 'step-pending'));
+        
+        // Update badge
+        if (badgeElement) {
+            fadeUpdate(badgeElement, () => {
+                badgeElement.className = 'float-end badge ' + (isCompleted ? 'bg-success' : (isInProgress ? 'bg-info' : 'bg-secondary'));
+                badgeElement.textContent = `${percentage}%`;
+            });
+        }
+        
+        // Update icon
+        if (iconElement) {
+            fadeUpdate(iconElement, () => {
+                iconElement.className = 'step-icon bi ' + (isCompleted ? 'bi-check-circle-fill' : (isInProgress ? 'bi-arrow-repeat' : 'bi-circle'));
+            });
+        }
+    }
+    
+    // Update categories UI with new data
+    function updateCategoriesUI(completedCategories, pendingCategories) {
+        // Update completed categories
+        const completedContainer = document.getElementById('completed-categories');
+        if (completedContainer && completedCategories && completedCategories.length > 0) {
+            // Create new list items
+            const newHtml = completedCategories.map(category => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${category.name}
+                    <span class="badge bg-success rounded-pill">${category.score} / ${category.max_points}</span>
+                </li>
+            `).join('');
+            
+            // Update only if content has changed
+            if (completedContainer.innerHTML.trim() !== newHtml.trim()) {
+                fadeUpdate(completedContainer, () => {
+                    completedContainer.innerHTML = newHtml;
+                });
+            }
+        }
+        
+        // Update pending categories
+        const pendingContainer = document.getElementById('pending-categories');
+        if (pendingContainer && pendingCategories && pendingCategories.length > 0) {
+            // Create new list items
+            const newHtml = pendingCategories.map(category => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${category.name}
+                    <span class="badge bg-secondary rounded-pill">Pending</span>
+                </li>
+            `).join('');
+            
+            // Update only if content has changed
+            if (pendingContainer.innerHTML.trim() !== newHtml.trim()) {
+                fadeUpdate(pendingContainer, () => {
+                    pendingContainer.innerHTML = newHtml;
+                });
+            }
+        }
+        
+        // Show or hide category row based on content
+        const categoryRow = document.querySelector('.category-list');
+        if (categoryRow) {
+            categoryRow.style.display = (completedCategories.length > 0 || pendingCategories.length > 0) ? 'block' : 'none';
+        }
+    }
+    
+    // Helper function to update status message
+    function updateStatusMessage(message) {
+        const statusElement = document.getElementById('progress-status');
+        if (statusElement) {
+            statusElement.textContent = message;
+        }
+    }
+    
+    // Helper function to add a fade transition when updating content
+    function fadeUpdate(element, updateFn) {
+        element.classList.add('fade-update', 'fade-out');
+        setTimeout(() => {
+            updateFn();
+            setTimeout(() => {
+                element.classList.remove('fade-out');
+            }, 50);
+        }, 300);
+    }
+</script>
 {% endblock %}

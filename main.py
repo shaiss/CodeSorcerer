@@ -622,6 +622,33 @@ def check_audit_progress():
     # Otherwise, return to progress page
     return render_template('audit_progress.html', progress=progress)
 
+@app.route('/api/audit-progress')
+def api_audit_progress():
+    """API endpoint to check the current audit progress."""
+    # Get progress ID from session
+    progress_id = session.get('audit_progress_id')
+    
+    if not progress_id or progress_id not in audit_progress_store:
+        return jsonify({
+            "error": "No audit in progress"
+        }), 404
+    
+    # Get progress data
+    progress = audit_progress_store[progress_id]
+    
+    # Convert progress data to JSON-serializable dict
+    progress_data = {
+        "overall_percentage": progress.overall_percentage,
+        "current_task": progress.current_task,
+        "steps": progress.steps,
+        "categories_completed": progress.categories_completed,
+        "categories_pending": progress.categories_pending,
+        "report_id": progress.report_id,
+        "error": progress.error
+    }
+    
+    return jsonify(progress_data)
+
 def run_audit_in_background(progress_id, repo_path, branch, config):
     """
     Run the audit process in a background thread with progress updates.
