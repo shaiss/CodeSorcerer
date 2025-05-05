@@ -326,8 +326,10 @@
     
     // Update category checkboxes based on selected bundle
     function updateCategorySelectionFromBundle() {
+        console.log("Bundle selection changed");
         const bundleSelect = document.getElementById('bundle');
         const selectedBundle = bundleSelect.value;
+        console.log("Selected bundle:", selectedBundle);
         
         if (!selectedBundle) {
             // No bundle selected, don't modify category selections
@@ -344,16 +346,23 @@
         const bundleOptions = bundleSelect.options;
         const selectedOption = bundleOptions[bundleSelect.selectedIndex];
         const categoriesStr = selectedOption.getAttribute('data-categories');
+        console.log("Categories string:", categoriesStr);
         
         if (categoriesStr) {
             try {
+                console.log("Attempting to parse JSON:", categoriesStr);
                 const categories = JSON.parse(categoriesStr);
+                console.log("Parsed categories:", categories);
                 
                 // Check the checkboxes for categories in the bundle
                 categories.forEach(category => {
+                    console.log("Setting category:", category);
                     const checkbox = document.getElementById(`cat_${category}`);
                     if (checkbox) {
                         checkbox.checked = true;
+                        console.log("Checkbox found and checked for:", category);
+                    } else {
+                        console.warn("Checkbox not found for:", category);
                     }
                 });
                 
@@ -362,6 +371,8 @@
             } catch (e) {
                 console.error('Error parsing bundle categories:', e);
             }
+        } else {
+            console.warn("No categories string found in the selected option");
         }
     }
     
