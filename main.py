@@ -1087,22 +1087,27 @@ def download_report(report_id):
         metadata=repo_metadata
     )
     
-    return_value = send_file(
+    # Schedule a background task to clean up the temporary file after a delay
+    # This is a better approach than using @app.after_request inside a route
+    def delayed_cleanup():
+        time.sleep(60)  # Give plenty of time for the download to complete
+        try:
+            if os.path.exists(temp_report_path):
+                os.unlink(temp_report_path)
+                logger.debug(f"Cleaned up temporary report file: {temp_report_path}")
+        except Exception as e:
+            logger.error(f"Error cleaning up temp file: {e}")
+    
+    # Start cleanup in a background thread
+    cleanup_thread = threading.Thread(target=delayed_cleanup)
+    cleanup_thread.daemon = True
+    cleanup_thread.start()
+    
+    return send_file(
         temp_report_path,
         as_attachment=True,
         download_name=f"{report.repo_name}_audit_report.md"
     )
-    
-    # Schedule cleanup after response is sent
-    @app.after_request
-    def cleanup(response):
-        try:
-            os.unlink(temp_report_path)
-        except:
-            pass
-        return response
-    
-    return return_value
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
