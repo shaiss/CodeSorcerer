@@ -814,10 +814,11 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
                 f"Completed analysis of {category_name}."
             )
         
-        # Update progress - AI Analysis complete
+        # Don't mark AI code analysis as 100% complete here; we'll set it to 95% instead
+        # The final 5% will be set after all report generation is complete
         progress.update_step_progress(
-            AuditStep.CODE_ANALYSIS, 100, 
-            "AI code analysis complete!"
+            AuditStep.CODE_ANALYSIS, 95, 
+            "AI code analysis in final stage..."
         )
         
         # Update progress - Report generation (start)
@@ -922,6 +923,12 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
         progress.update_step_progress(
             AuditStep.REPORT_GENERATION, 100, 
             "Audit completed successfully!"
+        )
+        
+        # Now mark the AI code analysis as 100% complete
+        progress.update_step_progress(
+            AuditStep.CODE_ANALYSIS, 100, 
+            "AI code analysis complete!"
         )
         
         # Set final report ID

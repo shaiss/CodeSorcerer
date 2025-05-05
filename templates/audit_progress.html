@@ -439,10 +439,19 @@
         completedCategories = Array.isArray(completedCategories) ? completedCategories : [];
         pendingCategories = Array.isArray(pendingCategories) ? pendingCategories : [];
         
+        // Log category data for debugging
+        console.log("Received categories data:", { 
+            completed: completedCategories,
+            pending: pendingCategories
+        });
+        
         try {
             // Handle completed categories
             const completedContainer = document.getElementById('completed-categories');
             const completedEmptyMsg = document.getElementById('completed-categories-empty');
+            
+            console.log("Completed container element:", completedContainer);
+            console.log("Completed empty message element:", completedEmptyMsg);
             
             if (completedCategories.length > 0) {
                 // Create new list items
@@ -453,13 +462,18 @@
                     </li>
                 `).join('');
                 
+                console.log("Generated HTML for completed categories:", newHtml);
+                
                 // Show the list, hide the empty message
                 if (completedContainer) {
-                    if (completedContainer.innerHTML.trim() !== newHtml.trim()) {
-                        completedContainer.innerHTML = newHtml;
-                    }
+                    // Force update the container even if it appears to be the same
+                    completedContainer.innerHTML = newHtml;
                     completedContainer.style.display = 'block';
+                    console.log("Updated completed categories container");
+                } else {
+                    console.log("Could not find completed-categories element");
                 }
+                
                 if (completedEmptyMsg) {
                     completedEmptyMsg.style.display = 'none';
                 }
@@ -471,11 +485,15 @@
                 if (completedEmptyMsg) {
                     completedEmptyMsg.style.display = 'block';
                 }
+                console.log("No completed categories to display");
             }
             
             // Handle pending categories
             const pendingContainer = document.getElementById('pending-categories');
             const pendingEmptyMsg = document.getElementById('pending-categories-empty');
+            
+            console.log("Pending container element:", pendingContainer);
+            console.log("Pending empty message element:", pendingEmptyMsg);
             
             if (pendingCategories.length > 0) {
                 // Create new list items
@@ -486,13 +504,18 @@
                     </li>
                 `).join('');
                 
+                console.log("Generated HTML for pending categories:", newHtml);
+                
                 // Show the list, hide the empty message
                 if (pendingContainer) {
-                    if (pendingContainer.innerHTML.trim() !== newHtml.trim()) {
-                        pendingContainer.innerHTML = newHtml;
-                    }
+                    // Force update the container regardless of content comparison
+                    pendingContainer.innerHTML = newHtml;
                     pendingContainer.style.display = 'block';
+                    console.log("Updated pending categories container");
+                } else {
+                    console.log("Could not find pending-categories element");
                 }
+                
                 if (pendingEmptyMsg) {
                     pendingEmptyMsg.style.display = 'none';
                 }
@@ -511,6 +534,7 @@
                     }
                     
                     pendingEmptyMsg.style.display = 'block';
+                    console.log("Showing empty pending message:", pendingEmptyMsg.textContent);
                 }
             }
         } catch (error) {
