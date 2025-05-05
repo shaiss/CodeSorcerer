@@ -289,20 +289,42 @@ def validate_repository_endpoint():
     
     # Check if it's a GitHub URL (either from parameter or by detecting URL)
     if is_github_param or is_github_url(repo_path):
-        return jsonify({
-            'valid': True,
-            'is_github_url': True,
-            'message': f"Valid GitHub repository URL: {repo_path}",
-            'github_url': repo_path,
-            'repo_name': extract_repo_name_from_url(repo_path),
-            'stats': {
-                'total_files': 'N/A (GitHub repository)',
-                'code_files': 'N/A',
-                'doc_files': 'N/A',
-                'other_files': 'N/A',
-                'file_types': {}
-            }
-        })
+        try:
+            # Extract repository name first (for display)
+            repo_name = extract_repo_name_from_url(repo_path)
+            
+            # Actually download the repository to get stats
+            logger.info(f"Downloading GitHub repository for validation: {repo_path}")
+            branch = request.args.get('branch', 'main')
+            temp_repo_path = download_github_repo(repo_path, branch)
+            
+            # Get repository statistics from the downloaded repo
+            repo_stats = get_repository_stats(temp_repo_path)
+            
+            # Clean up the temporary repository - we'll download it again during the actual audit
+            try:
+                import shutil
+                shutil.rmtree(temp_repo_path)
+                logger.info(f"Cleaned up temporary repository: {temp_repo_path}")
+            except Exception as cleanup_error:
+                logger.error(f"Error cleaning up temp directory: {cleanup_error}")
+            
+            return jsonify({
+                'valid': True,
+                'is_github_url': True,
+                'message': f"Valid GitHub repository URL: {repo_path}",
+                'github_url': repo_path,
+                'repo_name': repo_name,
+                'stats': repo_stats
+            })
+        except Exception as e:
+            logger.error(f"Error validating GitHub repository: {e}")
+            return jsonify({
+                'valid': False,
+                'is_github_url': True,
+                'message': f"Error validating GitHub repository: {str(e)}"
+            })
+            
     
     # Local repository path validation
     

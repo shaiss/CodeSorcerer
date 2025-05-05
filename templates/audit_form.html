@@ -266,6 +266,7 @@
     function validateRepository() {
         const repoPath = document.getElementById('repo_path').value;
         const isGithubUrl = document.getElementById('githubRepoType').checked;
+        const branch = document.getElementById('branch').value || 'main';
         
         if (!repoPath) {
             alert('Please enter a repository path or GitHub URL');
@@ -277,8 +278,21 @@
         document.getElementById('validationSpinner').style.display = 'block';
         document.getElementById('validationContent').style.display = 'none';
         
+        // Display validation message based on repo type
+        const validatingMsg = isGithubUrl 
+            ? "Downloading and validating GitHub repository... (this may take a minute)" 
+            : "Validating local repository...";
+        document.getElementById('validationSpinner').innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">${validatingMsg}</p>
+        `;
+        
         // Make an AJAX call to validate the repository
-        fetch('/validate-repository?path=' + encodeURIComponent(repoPath) + '&is_github=' + isGithubUrl)
+        fetch('/validate-repository?path=' + encodeURIComponent(repoPath) + 
+             '&is_github=' + isGithubUrl + 
+             '&branch=' + encodeURIComponent(branch))
             .then(response => response.json())
             .then(data => {
                 document.getElementById('validationSpinner').style.display = 'none';
