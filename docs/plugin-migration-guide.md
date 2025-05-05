@@ -35,7 +35,7 @@ id = "category_id"               # Must match original ID (e.g., "functionality"
 name = "Human-Readable Name"     # Display name (e.g., "Functionality & Features")
 version = "1.0.0"                # Start with 1.0.0
 description = "Brief description of what this category evaluates"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []                    # Dependencies on other categories, if any
 
 [config]

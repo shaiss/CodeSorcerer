@@ -5,7 +5,7 @@ id = "security"
 name = "Security & Risk Management"
 version = "1.0.0"
 description = "Evaluates code for security vulnerabilities, input validation, authentication mechanisms, and protection against common attacks"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []
 
 [config]

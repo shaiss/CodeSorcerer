@@ -5,7 +5,7 @@ id = "ux_design"
 name = "User Experience & Interface Design"
 version = "1.0.0"
 description = "Evaluates user interface design, usability, accessibility, and overall user experience"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []
 
 [config]

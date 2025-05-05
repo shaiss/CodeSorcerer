@@ -5,7 +5,7 @@ id = "documentation"
 name = "Documentation & Knowledge Transfer"
 version = "1.0.0"
 description = "Evaluates quality of project documentation, code comments, and ease of understanding for new developers"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []
 
 [config]

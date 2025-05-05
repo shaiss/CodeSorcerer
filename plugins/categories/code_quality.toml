@@ -5,7 +5,7 @@ id = "code_quality"
 name = "Code Quality"
 version = "1.0.0"
 description = "Evaluates code structure, readability, maintainability, and testing practices."
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []
 
 [config]

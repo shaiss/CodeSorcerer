@@ -5,7 +5,7 @@ id = "hackathon_bundle"
 name = "Hackathon Project Evaluation"
 version = "1.0.0"
 description = "A bundle of categories optimized for evaluating hackathon projects"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 
 [categories]
 # Standard categories

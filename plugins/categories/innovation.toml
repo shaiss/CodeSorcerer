@@ -5,7 +5,7 @@ id = "innovation"
 name = "Innovation & Creativity"
 version = "1.0.0"
 description = "Evaluates project novelty, technical innovation, market potential, and creative use of blockchain technology"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []
 
 [config]

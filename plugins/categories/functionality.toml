@@ -5,7 +5,7 @@ id = "functionality"
 name = "Functionality & Features"
 version = "1.0.0"
 description = "Evaluates feature completeness, correctness, error handling, and how well the application solves user problems"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []
 
 [config]

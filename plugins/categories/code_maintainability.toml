@@ -5,7 +5,7 @@ id = "code_maintainability"
 name = "Code Maintainability"
 version = "1.0.0"
 description = "Evaluates code structure, organization, and long-term maintainability factors"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []
 
 [config]

@@ -5,7 +5,7 @@ id = "developer_experience"
 name = "Developer Experience"
 version = "1.0.0"
 description = "Evaluates how developer-friendly the codebase is, including tooling, documentation, and onboarding"
-author = "Code Sorcerer"
+author = "Shai Perednik"
 requires = []
 
 [config]
