@@ -1,12 +1,14 @@
-# NEAR Hackathon Auditor
+# Code Sorcerer
 
-A command-line tool for performing on-demand, full-repository audits of NEAR-based hackathon projects.
+A robust code auditing and analysis tool that leverages AI to evaluate software projects across multiple dimensions.
 
 ## 🎯 Features
 
-- Local repository analysis
-- OpenAI GPT-4o integration
-- Seven-category evaluation:
+- **Repository Analysis**: Analyze local repositories or GitHub projects
+- **AI-Powered Evaluation**: Integrates with OpenAI GPT-4.1 for intelligent code analysis
+- **Web Interface**: Intuitive browser-based interface for managing audits
+- **Real-time Progress Tracking**: Monitor audit progress with live updates
+- **Multi-category Evaluation**:
   - Code Quality
   - Functionality
   - Security
@@ -14,21 +16,131 @@ A command-line tool for performing on-demand, full-repository audits of NEAR-bas
   - Documentation
   - UX Design
   - Blockchain Integration
-- Markdown scorecard generation
-- Customizable configuration
+- **Detailed Reports**: Comprehensive Markdown reports with scoring and feedback
+- **Customizable Configuration**: Configure categories and scoring criteria
 
 ## 📋 Prerequisites
 
 - Python 3.7+
-- OpenAI API key
+- OpenAI API key (environment variable: `OPENAI_API_KEY`)
+- Git (for repository operations)
 
-## 🛠️ Installation
+## 🚀 Getting Started
+
+### Web Interface
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/username/code-sorcerer.git
+   cd code-sorcerer
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Set up your OpenAI API key:
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+
+4. Start the web server:
+   ```bash
+   python main.py
+   # Or use Gunicorn:
+   gunicorn --bind 0.0.0.0:5000 main:app
+   ```
+
+5. Open your browser and navigate to http://localhost:5000
+
+### Command Line Usage
 
 ```bash
-# Install from PyPI
-pip install audit-near
+# Run an audit on a local repository
+python -m audit_near /path/to/repository
 
-# Or install from source
-git clone https://github.com/example/audit-near.git
-cd audit-near
-pip install -e .
+# Run an audit on a GitHub repository
+python -m audit_near https://github.com/username/repository
+
+# Run with a custom configuration file
+python -m audit_near /path/to/repository --config /path/to/config.toml
+
+# Output to a specific file
+python -m audit_near /path/to/repository --output /path/to/output.md
+```
+
+## 🧩 Architecture
+
+Code Sorcerer consists of the following key components:
+
+- **Web Interface** - Flask-based web application for user interaction
+- **Audit Engine** - Core audit processing and orchestration
+- **Repository Providers** - Handling different repository sources (local, GitHub)
+- **AI Client** - Integration with OpenAI for code analysis
+- **Category Processors** - Analysis of specific project aspects
+- **Report Generator** - Creation of detailed markdown reports
+
+## 📊 Evaluation Categories
+
+### Code Quality
+Evaluates code structure, readability, maintainability, and adherence to best practices.
+
+### Functionality
+Assesses feature completeness, correctness, and robustness.
+
+### Security
+Evaluates security practices, vulnerability prevention, and data protection.
+
+### Innovation
+Measures originality, creativity, and novel approaches to problem-solving.
+
+### Documentation
+Assesses comprehensiveness, clarity, and helpfulness of documentation.
+
+### UX Design
+Evaluates usability, accessibility, and overall user experience.
+
+### Blockchain Integration
+Assesses proper integration with blockchain technologies and smart contracts.
+
+## 📋 Sample Reports
+
+The repository includes several sample audit reports for reference:
+
+- [Smart Contract Project Audit](docs/report-samples/smart_contract_audit.md)
+- [Web Application Audit](docs/report-samples/web_app_audit.md)
+- [Frontend Application Audit](docs/report-samples/frontend_app_audit.md)
+- [Blockchain Integration Audit](docs/report-samples/blockchain_integration_audit.md)
+
+## ⚙️ Configuration
+
+Code Sorcerer is highly configurable through TOML configuration files. The default configuration is located in `configs/near_hackathon.toml`.
+
+Example configuration:
+
+```toml
+[general]
+name = "Code Sorcerer"
+version = "0.1.0"
+description = "Comprehensive code audit and analysis tool"
+
+[categories.code_quality]
+name = "Code Quality"
+max_points = 10
+description = "Evaluates code structure, readability, maintainability, and adherence to best practices"
+
+# Additional category configurations...
+
+[ai]
+primary_model = "gpt-4.1-2025-04-14"
+nano_model = "gpt-4.1-nano-2025-04-14"
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

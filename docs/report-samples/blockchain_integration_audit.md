@@ -1,4 +1,4 @@
-# NEAR Hackathon Project Audit Report
+# Code Sorcerer Project Audit Report
 
 ## Repository Information
 
