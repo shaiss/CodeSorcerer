@@ -108,6 +108,92 @@
                         </div>
                     </div>
                     
+                    <!-- Category and Bundle Selection -->
+                    <div class="mb-3 mt-4">
+                        <h4>Audit Configuration</h4>
+                        
+                        {% if available_bundles %}
+                        <div class="mb-3">
+                            <label for="bundle" class="form-label">Select a Bundle</label>
+                            <select class="form-select" id="bundle" name="bundle">
+                                <option value="">-- Custom Configuration --</option>
+                                {% for bundle in available_bundles %}
+                                <option value="{{ bundle.id }}">{{ bundle.name }} - {{ bundle.description }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Bundles are predefined sets of categories optimized for specific use cases</div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3" id="categorySelection">
+                            <label class="form-label">Select Categories to Audit</label>
+                            <div class="row">
+                                <!-- Standard Categories -->
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">Standard Categories</div>
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="categories" value="code_quality" id="cat_code_quality" checked>
+                                                <label class="form-check-label" for="cat_code_quality">Code Quality (20 pts)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="categories" value="functionality" id="cat_functionality" checked>
+                                                <label class="form-check-label" for="cat_functionality">Functionality (15 pts)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="categories" value="security" id="cat_security" checked>
+                                                <label class="form-check-label" for="cat_security">Security (20 pts)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="categories" value="documentation" id="cat_documentation" checked>
+                                                <label class="form-check-label" for="cat_documentation">Documentation (15 pts)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="categories" value="innovation" id="cat_innovation" checked>
+                                                <label class="form-check-label" for="cat_innovation">Innovation (10 pts)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="categories" value="ux_design" id="cat_ux_design" checked>
+                                                <label class="form-check-label" for="cat_ux_design">UX Design (10 pts)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="categories" value="blockchain_integration" id="cat_blockchain_integration" checked>
+                                                <label class="form-check-label" for="cat_blockchain_integration">Blockchain Integration (10 pts)</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Plugin Categories -->
+                                {% if available_categories %}
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header bg-light">Plugin Categories</div>
+                                        <div class="card-body">
+                                            {% for category in available_categories %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="categories" value="{{ category.id }}" id="cat_{{ category.id }}">
+                                                <label class="form-check-label" for="cat_{{ category.id }}">
+                                                    {{ category.name }} ({{ category.max_points }} pts)
+                                                    {% if category.description %}
+                                                    <i class="bi bi-info-circle" title="{{ category.description }}"></i>
+                                                    {% endif %}
+                                                </label>
+                                            </div>
+                                            {% endfor %}
+                                            
+                                            <div class="text-center mt-3">
+                                                <span class="badge bg-primary">{{ plugin_count }} Plugin(s) Available</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="form-text mb-3">
                         <div class="alert alert-info">
                             <strong>Important:</strong> The audit process may take several minutes depending on the repository size.
