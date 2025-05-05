@@ -1,0 +1,20 @@
+# Code Quality Plugin 
+
+[metadata]
+id = "code_quality"
+name = "Code Quality & Documentation"
+version = "1.0.0"
+description = "Evaluates code structure, readability, maintainability, testing practices, and documentation"
+author = "Code Sorcerer"
+requires = []
+
+[config]
+max_points = 20
+prompt_file = "code_quality.md"
+enhanced = true
+
+[patterns]
+# Include source code files from common languages
+include = ["\\.py$", "\\.js$", "\\.jsx$", "\\.ts$", "\\.tsx$", "\\.rs$", "\\.sol$", "\\.c$", "\\.cpp$", "\\.h$", "\\.hpp$", "\\.java$", "\\.go$", "\\.rb$", "\\.php$", "\\.cs$", "\\.html$", "\\.css$", "\\.sass$", "\\.scss$"]
+# Exclude test files, build artifacts, and dependencies
+exclude = ["node_modules", "dist", "build", "target", "venv", "__pycache__", "\\.min\\.js$", "\\.bundle\\.js$"]
