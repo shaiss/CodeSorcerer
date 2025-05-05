@@ -133,14 +133,16 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
     from audit_near.plugins.management import discover_plugins, init_plugins_directory
     
     # Legacy category map for backward compatibility
+    # Note: All categories have been migrated to plugins. This is kept for backward
+    # compatibility with older code or configs that might still reference these classes.
     legacy_category_map = {
-        "code_quality": EnhancedCodeQuality,  # Use the enhanced version
-        "functionality": Functionality,
-        "security": Security,
-        "innovation": Innovation,
-        "documentation": Documentation,
-        "ux_design": UXDesign,
-        "blockchain_integration": EnhancedBlockchainIntegration,  # Use the enhanced version
+        "code_quality": EnhancedCodeQuality,  # Migrated to plugin
+        "functionality": Functionality,       # Migrated to plugin
+        "security": Security,                 # Migrated to plugin
+        "innovation": Innovation,             # Migrated to plugin
+        "documentation": Documentation,       # Migrated to plugin
+        "ux_design": UXDesign,                # Migrated to plugin
+        "blockchain_integration": EnhancedBlockchainIntegration,  # Migrated to plugin
     }
     
     # Initialize plugins directory
@@ -212,7 +214,7 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
         
         # Legacy category handling (backward compatibility)
         elif category_name in legacy_category_map:
-            logging.info(f"Using legacy class for category: {category_name}")
+            logging.warning(f"Using legacy class for category: {category_name} - This category has been migrated to a plugin but is not found in the registry. Please check your plugins directory.")
             category_class = legacy_category_map[category_name]
             prompt_file = os.path.join(base_prompts_dir, f"{category_name}.md")
             

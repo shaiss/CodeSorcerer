@@ -1,0 +1,20 @@
+# Blockchain Integration Plugin
+
+[metadata]
+id = "blockchain_integration"
+name = "NEAR Protocol Integration"
+version = "1.0.0"
+description = "Evaluates the quality of blockchain integration, including smart contract implementation, wallet connections, and NEAR Protocol feature usage"
+author = "Code Sorcerer"
+requires = []
+enhanced = true
+
+[config]
+max_points = 20
+prompt_file = "blockchain_integration.md"
+
+[patterns]
+# Focus on blockchain/NEAR-related files and code patterns
+include = ["contract", "near", "wallet", "blockchain", "web3", "transaction", "sign", "connect", "account", "token", "nft", "dapp", "\\.js$", "\\.jsx$", "\\.ts$", "\\.tsx$", "\\.rs$", "\\.sol$", "Cargo.toml", "package.json"]
+# Exclude test files, build artifacts, and dependencies
+exclude = ["node_modules", "dist", "build", "target", "venv", "__pycache__", "test", "spec", "mock", "\\.min\\.js$", "\\.bundle\\.js$"]
