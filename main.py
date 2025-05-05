@@ -67,6 +67,7 @@ from audit_near.cli import load_config, get_category_handlers
 from audit_near.ai_client import AiClient
 from audit_near.providers.repo_provider import RepoProvider
 from audit_near.providers.repo_analyzer import RepoAnalyzer
+from audit_near.providers.github_provider import is_github_url, download_github_repo, extract_repo_name_from_url
 from audit_near.reporters.markdown_reporter import MarkdownReporter
 
 @app.route('/')
@@ -86,16 +87,46 @@ def audit():
         repo_path = request.form.get('repo_path')
         
         if not repo_path:
-            flash('Repository path is required', 'error')
+            flash('Repository path or GitHub URL is required', 'error')
             return redirect(url_for('audit'))
         
-        # Expand path if it contains a tilde
-        if '~' in repo_path:
-            repo_path = os.path.expanduser(repo_path)
-        
-        # Convert to absolute path if it's relative
-        if not os.path.isabs(repo_path):
-            repo_path = os.path.abspath(repo_path)
+        # Check if the input is a GitHub URL
+        if is_github_url(repo_path):
+            try:
+                # Get branch name from form
+                branch = request.form.get('branch', 'main')
+                
+                # Download the repository
+                logger.info(f"Downloading GitHub repository: {repo_path}, branch: {branch}")
+                temp_repo_path = download_github_repo(repo_path, branch)
+                
+                # Extract repo name for display purposes
+                repo_name = extract_repo_name_from_url(repo_path)
+                
+                # Set session variables
+                session['is_github_repo'] = True
+                session['github_url'] = repo_path
+                session['repo_name'] = repo_name
+                repo_path = temp_repo_path
+                
+                logger.info(f"GitHub repository downloaded to: {repo_path}")
+                flash(f"GitHub repository '{repo_name}' downloaded successfully.", 'success')
+                
+            except Exception as e:
+                logger.error(f"Error downloading GitHub repository: {e}")
+                flash(f"Error downloading GitHub repository: {str(e)}", 'error')
+                return redirect(url_for('audit'))
+        else:
+            # Handle local repository path
+            session['is_github_repo'] = False
+            
+            # Expand path if it contains a tilde
+            if '~' in repo_path:
+                repo_path = os.path.expanduser(repo_path)
+            
+            # Convert to absolute path if it's relative
+            if not os.path.isabs(repo_path):
+                repo_path = os.path.abspath(repo_path)
         
         # Enhanced validation of repository path
         validation_result, validation_message = validate_repository_path(repo_path)
@@ -248,8 +279,27 @@ def validate_repository_endpoint():
     if not repo_path:
         return jsonify({
             'valid': False,
-            'message': 'Repository path is required'
+            'message': 'Repository path or GitHub URL is required'
         })
+    
+    # Check if it's a GitHub URL
+    if is_github_url(repo_path):
+        return jsonify({
+            'valid': True,
+            'is_github_url': True,
+            'message': f"Valid GitHub repository URL: {repo_path}",
+            'github_url': repo_path,
+            'repo_name': extract_repo_name_from_url(repo_path),
+            'stats': {
+                'total_files': 'N/A (GitHub repository)',
+                'code_files': 'N/A',
+                'doc_files': 'N/A',
+                'other_files': 'N/A',
+                'file_types': {}
+            }
+        })
+    
+    # Local repository path validation
     
     # Expand path if it contains a tilde
     if '~' in repo_path:
@@ -267,12 +317,14 @@ def validate_repository_endpoint():
         stats = get_repository_stats(repo_path)
         return jsonify({
             'valid': True,
+            'is_github_url': False,
             'message': message,
             'stats': stats
         })
     else:
         return jsonify({
             'valid': False,
+            'is_github_url': False,
             'message': message
         })
 
