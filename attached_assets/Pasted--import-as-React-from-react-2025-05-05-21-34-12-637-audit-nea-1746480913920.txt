@@ -1,0 +1,332 @@
+
+import * as React from "react";
+                              ^
+2025-05-05 21:34:12,637 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as LabelPrimitive from "@radix-ui/react-label";
+         ^
+2025-05-05 21:34:12,637 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import * as React from "react";
+^
+2025-05-05 21:34:12,637 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
+         ^
+2025-05-05 21:34:12,637 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import * as React from "react";
+^
+2025-05-05 21:34:12,637 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as PopoverPrimitive from "@radix-ui/react-popover";
+         ^
+2025-05-05 21:34:12,638 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+import * as React from "react";
+^
+2025-05-05 21:34:12,638 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+         ^
+2025-05-05 21:34:12,638 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import { GripVertical } from "lucide-react";
+^
+2025-05-05 21:34:12,638 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import * as React from "react";
+^
+2025-05-05 21:34:12,638 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as SelectPrimitive from "@radix-ui/react-select";
+         ^
+2025-05-05 21:34:12,638 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import * as React from "react";
+^
+2025-05-05 21:34:12,639 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import { cva, type VariantProps } from "class-variance-authority";
+         ^
+2025-05-05 21:34:12,639 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import * as React from "react";
+^
+2025-05-05 21:34:12,639 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:1.
+parser error: error at 1:9: expected NAME
+
+import { cn } from "@/lib/utils";
+                                ^
+2025-05-05 21:34:12,639 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as SliderPrimitive from "@radix-ui/react-slider";
+         ^
+2025-05-05 21:34:12,639 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import { Toaster as Sonner } from "sonner";
+         ^
+2025-05-05 21:34:12,639 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as SwitchPrimitives from "@radix-ui/react-switch";
+         ^
+2025-05-05 21:34:12,640 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:1.
+parser error: error at 1:9: expected NAME
+
+import * as React from "react";
+                              ^
+2025-05-05 21:34:12,640 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+         ^
+2025-05-05 21:34:12,640 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:1.
+parser error: error at 1:9: expected NAME
+
+import * as React from "react";
+                              ^
+2025-05-05 21:34:12,640 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as ToastPrimitives from "@radix-ui/react-toast";
+         ^
+2025-05-05 21:34:12,640 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:9.
+parser error: error at 1:9: expected NAME
+
+import {
+        ^
+2025-05-05 21:34:12,641 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
+         ^
+2025-05-05 21:34:12,641 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as TogglePrimitive from "@radix-ui/react-toggle";
+         ^
+2025-05-05 21:34:12,641 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+         ^
+2025-05-05 21:34:12,641 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:1.
+parser error: error at 1:9: expected NAME
+
+import { useToast, toast } from "@/hooks/use-toast";
+                                                   ^
+2025-05-05 21:34:12,641 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:1.
+parser error: error at 1:9: expected NAME
+
+import { TokenInfo } from "@/types/token";
+                                         ^
+2025-05-05 21:34:12,641 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+import * as React from "react";
+^
+2025-05-05 21:34:12,641 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import * as React from "react";
+^
+2025-05-05 21:34:12,641 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import { twMerge } from "tailwind-merge";
+         ^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+import React, { useState, useEffect } from "react";
+^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:10.
+parser error: error at 1:9: expected NAME
+
+import { useEffect } from "react";
+         ^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:4.
+parser error: error at 1:3: expected one of (, *, +, -, ..., AWAIT, EOF, False, NAME, NUMBER, None, True, [, break, continue, lambda, match, not, pass, ~
+
+export interface TokenInfo {
+   ^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import type {
+^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 3:3.
+parser error: error at 2:2: expected one of !=, %, &, (, *, **, +, ,, -, ., /, //, :, ;, <, <<, <=, =, ==, >, >=, >>, @, NEWLINE, [, ^, and, if, in, is, not, or, |
+
+  getImplicit,
+  ^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import * as nearAPI from "near-api-js";
+^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+parser error: error at 1:15: expected one of !=, %, &, (, *, **, +, ,, -, ., /, //, :, ;, <, <<, <=, =, ==, >, >=, >>, @, NEWLINE, [, ^, and, if, in, is, not, or, |
+
+declare module "@neardefi/shade-agent-js";
+^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,642 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:1.
+parser error: error at 1:9: expected NAME
+
+import { defineConfig } from "vitest/config";
+                                            ^
+2025-05-05 21:34:12,643 - audit_near.providers.ast_analyzer - DEBUG - Error parsing javascript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,643 - audit_near.providers.ast_analyzer - DEBUG - Error parsing javascript code: Syntax Error @ 1:1.
+tokenizer error: unterminated string literal
+
+/**
+^
+2025-05-05 21:34:12,643 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import axios, { AxiosInstance, AxiosError } from 'axios';
+^
+2025-05-05 21:34:12,643 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,643 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:15.
+parser error: error at 1:14: expected one of +, -, ..., AWAIT, False, NUMBER, None, True, ~
+
+export * from './errors.js';
+              ^
+2025-05-05 21:34:12,643 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+import { z } from "zod";
+^
+2025-05-05 21:34:12,643 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,643 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:2.
+parser error: error at 1:1: expected one of (, *, +, -, ..., AWAIT, EOF, False, NAME, NUMBER, None, True, [, break, continue, lambda, match, not, pass, ~
+
+ * Main entry point for the scheduler worker
+ ^
+2025-05-05 21:34:12,644 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: unexpected characters after a line continuation
+
+/**
+^
+2025-05-05 21:34:12,644 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,644 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 2:2.
+parser error: error at 1:1: expected one of (, *, +, -, ..., AWAIT, EOF, False, NAME, NUMBER, None, True, [, break, continue, lambda, match, not, pass, ~
+
+ * Database initialization script
+ ^
+2025-05-05 21:34:12,644 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,645 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,645 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '?' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,645 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,645 - audit_near.providers.ast_analyzer - DEBUG - Error parsing javascript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,645 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 3:3.
+parser error: error at 2:2: expected one of (, *, +, -, ..., AWAIT, False, NAME, NUMBER, None, True, [, lambda, not, yield, ~
+
+process.env.REDIS_HOST = "localhost";
+  ^
+2025-05-05 21:34:12,646 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,646 - audit_near.providers.ast_analyzer - DEBUG - Error parsing typescript code: Syntax Error @ 1:1.
+tokenizer error: '`' is not a valid character in this position
+
+/**
+^
+2025-05-05 21:34:12,646 - audit_near.providers.ast_analyzer - DEBUG - Error parsing javascript code: Syntax Error @ 2:14.
+parser error: error at 1:13: expected one of !=, %, &, (, *, **, +, ,, -, ., /, //, :, ;, <, <<, <=, =, ==, >, >=, >>, @, NEWLINE, [, ^, and, if, in, is, not, or, |
+
+  tcb_info_issuer_chain:
+             ^
+2025-05-05 21:34:12,646 - audit_near.providers.ast_analyzer - DEBUG - Error parsing javascript code: Syntax Error @ 2:18.
+parser error: error at 1:17: expected one of ,, ., ;, NEWLINE, as
+
+import fs from "fs";
+                 ^
+2025-05-05 21:34:12,646 - audit_near.providers.repo_analyzer - INFO - Completed AST analysis
+2025-05-05 21:34:12,677 - audit_near.providers.repo_analyzer - INFO - Repository analysis completed
+2025-05-05 21:34:12,677 - audit_near.plugins.management - INFO - Initialized plugins directory structure at: /home/runner/workspace/plugins
+2025-05-05 21:34:12,677 - audit_near.plugins.loader - INFO - Loading plugin from: /home/runner/workspace/plugins/categories/code_maintainability.toml
+2025-05-05 21:34:12,678 - audit_near.plugins.registry - INFO - Registered category: code_maintainability
+2025-05-05 21:34:12,678 - audit_near.plugins.loader - INFO - Successfully loaded plugin: code_maintainability
+2025-05-05 21:34:12,678 - audit_near.plugins.loader - INFO - Loading plugin from: /home/runner/workspace/plugins/categories/developer_experience.toml
+2025-05-05 21:34:12,678 - audit_near.plugins.registry - INFO - Registered category: developer_experience
+2025-05-05 21:34:12,678 - audit_near.plugins.loader - INFO - Successfully loaded plugin: developer_experience
+2025-05-05 21:34:12,678 - audit_near.plugins.loader - INFO - Loaded 2 plugins: code_maintainability, developer_experience
+2025-05-05 21:34:12,678 - root - INFO - Loaded 2 plugins: code_maintainability, developer_experience
+2025-05-05 21:34:12,678 - root - INFO - Using legacy class for category: blockchain_integration
+2025-05-05 21:34:12,681 - root - INFO - Using plugin for category: code_maintainability
+2025-05-05 21:34:12,681 - root - ERROR - Prompt file not found: /home/runner/workspace/prompts/code_maintainability.md
+2025-05-05 21:34:12,681 - main - ERROR - Error running audit
+Traceback (most recent call last):
+  File "/home/runner/workspace/main.py", line 922, in run_audit_in_background
+    category_handlers = get_category_handlers(config, ai_client, repo_path, branch)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/audit_near/cli.py", line 191, in get_category_handlers
+    handlers[category_name] = category_class(
+                              ^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/audit_near/categories/base_category.py", line 55, in __init__
+    self.prompt_template = load_prompt_template(prompt_file)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/audit_near/categories/utils.py", line 26, in load_prompt_template
+    with open(prompt_file, "r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/runner/workspace/prompts/code_maintainability.md'

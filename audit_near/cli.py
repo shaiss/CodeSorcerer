@@ -163,13 +163,19 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
             category_class = registry.get_category(category_name)
             metadata = registry.get_metadata(category_name)
             
+            # Get the plugin directory for this category
+            plugin_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "plugins", "categories"
+            )
+            
             # Get prompt file from metadata or use default
             if "prompt_file" in category_config:
                 # Use prompt file from config
-                prompt_file = os.path.join(base_prompts_dir, category_config["prompt_file"])
+                prompt_file = os.path.join(plugin_dir, category_config["prompt_file"])
             else:
                 # Use default prompt file name
-                prompt_file = os.path.join(base_prompts_dir, f"{category_name}.md")
+                prompt_file = os.path.join(plugin_dir, f"{category_name}.md")
             
             # Determine if this is an enhanced category
             is_enhanced = metadata.get("enhanced", False)
