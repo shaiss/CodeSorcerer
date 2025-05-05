@@ -124,8 +124,13 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
         "prompts"
     )
     
-    # Define category map with enhanced processors where available
-    category_map = {
+    # Import the registry and plugin loader
+    from audit_near.plugins.registry import registry
+    from audit_near.plugins.loader import loader
+    from audit_near.plugins.management import discover_plugins, init_plugins_directory
+    
+    # Legacy category map for backward compatibility
+    legacy_category_map = {
         "code_quality": EnhancedCodeQuality,  # Use the enhanced version
         "functionality": Functionality,
         "security": Security,
@@ -135,17 +140,79 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
         "blockchain_integration": EnhancedBlockchainIntegration,  # Use the enhanced version
     }
     
+    # Initialize plugins directory
+    init_plugins_directory()
+    
+    # Discover and load plugins
+    loaded_plugins = discover_plugins()
+    logging.info(f"Loaded {len(loaded_plugins)} plugins: {', '.join(loaded_plugins)}")
+    
     handlers = {}
-    for category_name, category_class in category_map.items():
-        if category_name in config["categories"]:
-            category_config = config["categories"][category_name]
+    
+    # Process categories from configuration
+    for category_name in config["categories"]:
+        category_config = config["categories"][category_name]
+        max_points = category_config.get("max_points", 10)
+        
+        # Check if this category is available in the registry (plugin system)
+        if registry.get_category(category_name):
+            logging.info(f"Using plugin for category: {category_name}")
+            category_class = registry.get_category(category_name)
+            metadata = registry.get_metadata(category_name)
+            
+            # Get prompt file from metadata or use default
+            if "prompt_file" in category_config:
+                # Use prompt file from config
+                prompt_file = os.path.join(base_prompts_dir, category_config["prompt_file"])
+            else:
+                # Use default prompt file name
+                prompt_file = os.path.join(base_prompts_dir, f"{category_name}.md")
+            
+            # Determine if this is an enhanced category
+            is_enhanced = metadata.get("enhanced", False)
+            
+            if is_enhanced:
+                # Use enhanced initialization with branch parameter
+                handlers[category_name] = category_class(
+                    ai_client=ai_client,
+                    prompt_file=prompt_file,
+                    max_points=max_points,
+                    repo_path=repo_path,
+                    category_name=metadata.get("name", category_name),
+                    branch=branch
+                )
+            else:
+                # Use standard initialization
+                try:
+                    # Try to initialize with category_name (new style)
+                    handlers[category_name] = category_class(
+                        ai_client=ai_client,
+                        prompt_file=prompt_file,
+                        max_points=max_points,
+                        repo_path=repo_path,
+                        category_name=metadata.get("name", category_name)
+                    )
+                except TypeError:
+                    # Fall back to old style without category_name
+                    handlers[category_name] = category_class(
+                        ai_client=ai_client,
+                        prompt_file=prompt_file,
+                        max_points=max_points,
+                        repo_path=repo_path
+                    )
+        
+        # Legacy category handling (backward compatibility)
+        elif category_name in legacy_category_map:
+            logging.info(f"Using legacy class for category: {category_name}")
+            category_class = legacy_category_map[category_name]
             prompt_file = os.path.join(base_prompts_dir, f"{category_name}.md")
+            
             # Check if this is an enhanced category that requires a branch parameter
             if category_class in [EnhancedCodeQuality, EnhancedBlockchainIntegration]:
                 handlers[category_name] = category_class(
                     ai_client=ai_client,
                     prompt_file=prompt_file,
-                    max_points=category_config.get("max_points", 10),
+                    max_points=max_points,
                     repo_path=repo_path,
                     branch=branch
                 )
@@ -154,9 +221,11 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
                 handlers[category_name] = category_class(
                     ai_client=ai_client,
                     prompt_file=prompt_file,
-                    max_points=category_config.get("max_points", 10),
+                    max_points=max_points,
                     repo_path=repo_path
                 )
+        else:
+            logging.warning(f"Category {category_name} not found in registry or legacy map, skipping")
     
     return handlers
 
