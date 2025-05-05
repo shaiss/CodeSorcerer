@@ -22,20 +22,20 @@ Evaluate the overall quality of the provided code, focusing on:
 
 ### Scoring Guidelines:
 
-* **16–20 pts**: Clean, modular, well-structured code. Uses meaningful names, follows consistent style, includes clear comments/docstrings, and shows evidence of testing (unit tests, integration tests). Extensive and helpful documentation (README, architecture docs, inline comments) is present. Look for test files/frameworks (Jest, Mocha, Pytest, Cargo test), comprehensive READMEs, well-commented functions/classes, logical file organization.
+* **9–10 pts**: Clean, modular, well-structured code. Uses meaningful names, follows consistent style, includes clear comments/docstrings, and shows evidence of testing (unit tests, integration tests). Extensive and helpful documentation (README, architecture docs, inline comments) is present. Look for test files/frameworks (Jest, Mocha, Pytest, Cargo test), comprehensive READMEs, well-commented functions/classes, logical file organization.
 
-* **11–15 pts**: Generally good quality with some areas for improvement. Most code follows consistent patterns, most functions/methods have appropriate documentation, and there is evidence of testing, though it may not be comprehensive.
+* **7–8 pts**: Generally good quality with some areas for improvement. Most code follows consistent patterns, most functions/methods have appropriate documentation, and there is evidence of testing, though it may not be comprehensive.
 
-* **6–10 pts**: Moderate clarity and organization. Some parts may be well-structured, while others are less clear. Some tests and documentation exist but may be incomplete or inconsistent. Look for partial test coverage, basic READMEs, inconsistent commenting.
+* **4–6 pts**: Moderate clarity and organization. Some parts may be well-structured, while others are less clear. Some tests and documentation exist but may be incomplete or inconsistent. Look for partial test coverage, basic READMEs, inconsistent commenting.
 
-* **0–5 pts**: Poorly organized, difficult-to-read code. Lack of modularity (e.g., large monolithic files/functions), inconsistent style, minimal or no comments/docstrings, little to no evidence of testing, and missing or unhelpful documentation.
+* **0–3 pts**: Poorly organized, difficult-to-read code. Lack of modularity (e.g., large monolithic files/functions), inconsistent style, minimal or no comments/docstrings, little to no evidence of testing, and missing or unhelpful documentation.
 
 ## Output Format
 
 Provide your assessment in the following JSON format:
 ```json
 {
-  "score": <score between 0 and 20>,
+  "score": <score between 0 and 10>,
   "feedback": "<detailed feedback with specific observations and recommendations>"
 }
 ```

@@ -9,7 +9,7 @@ author = "Code Sorcerer"
 requires = []
 
 [config]
-max_points = 20
+max_points = 10
 prompt_file = "code_quality.md"
 enhanced = true
 
