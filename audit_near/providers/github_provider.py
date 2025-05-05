@@ -92,6 +92,7 @@ def get_repository_branches(repo_path):
         # Also get remote branches
         remote_branches = []
         try:
+            # Method 1: Using GitPython API
             for remote in repo.remotes:
                 # Fetch to ensure we have remote branch info
                 remote.fetch()
@@ -104,6 +105,38 @@ def get_repository_branches(repo_path):
                     # Check if this is already a local branch
                     if branch_name not in [b.name for b in local_branches]:
                         remote_branches.append((branch_name, ref))
+            
+            # Method 2: Direct git command for shallow clones
+            # This is helpful when we use depth=1 and don't have full branch info
+            if len(remote_branches) == 0:
+                try:
+                    import subprocess
+                    # Run git branch -r to get remote branches
+                    result = subprocess.run(
+                        ['git', 'branch', '-r'], 
+                        cwd=repo_path, 
+                        capture_output=True, 
+                        text=True, 
+                        check=True
+                    )
+                    
+                    if result.stdout:
+                        # Parse branch names from output
+                        for line in result.stdout.splitlines():
+                            line = line.strip()
+                            if line and not line.endswith('/HEAD'):
+                                # Remote branch format is usually 'origin/branch_name'
+                                branch_parts = line.split('/', 1)
+                                if len(branch_parts) > 1:
+                                    remote_name, branch_name = branch_parts
+                                    # Check if already in local branches
+                                    if branch_name not in [b.name for b in local_branches]:
+                                        # Create a simple tuple with branch name
+                                        remote_branches.append((branch_name, None))
+                                        logger.debug(f"Added remote branch from git command: {branch_name}")
+                except Exception as cmd_error:
+                    logger.warning(f"Error getting remote branches via git command: {cmd_error}")
+                    
             logger.info(f"Found {len(remote_branches)} additional remote branches")
         except Exception as e:
             logger.warning(f"Error fetching remote branches: {e}")
@@ -127,16 +160,42 @@ def get_repository_branches(repo_path):
         # Process remote branches
         for branch_name, ref in remote_branches:
             try:
-                # Get latest commit for remote branch
-                commit = next(repo.iter_commits(ref.name, max_count=1))
-                branches.append({
-                    'name': branch_name,
-                    'commit_hash': commit.hexsha,
-                    'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
-                    'commit_message': commit.message.strip().split('\n')[0],
-                    'is_default': branch_name == default_branch,
-                    'is_remote': True
-                })
+                if ref:
+                    # If we have a reference object, use it to get commit info
+                    commit = next(repo.iter_commits(ref.name, max_count=1))
+                    branches.append({
+                        'name': branch_name,
+                        'commit_hash': commit.hexsha,
+                        'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                        'commit_message': commit.message.strip().split('\n')[0],
+                        'is_default': branch_name == default_branch,
+                        'is_remote': True
+                    })
+                else:
+                    # For branches discovered via git command without ref objects
+                    # Create a simpler branch entry with just the name
+                    ref_name = f"origin/{branch_name}"
+                    try:
+                        # Try to get commit info using string reference
+                        commit = next(repo.iter_commits(ref_name, max_count=1))
+                        branches.append({
+                            'name': branch_name,
+                            'commit_hash': commit.hexsha,
+                            'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                            'commit_message': commit.message.strip().split('\n')[0],
+                            'is_default': branch_name == default_branch,
+                            'is_remote': True
+                        })
+                    except:
+                        # If that fails, just add the branch name with minimal info
+                        branches.append({
+                            'name': branch_name,
+                            'commit_hash': 'unknown',
+                            'commit_date': 'unknown',
+                            'commit_message': '',
+                            'is_default': branch_name == default_branch,
+                            'is_remote': True
+                        })
                 logger.debug(f"Added remote branch: {branch_name}")
             except Exception as e:
                 logger.warning(f"Error processing remote branch {branch_name}: {e}")
@@ -198,14 +257,13 @@ def download_github_repo(url, branch='main'):
             logger.info(f"Using GitHub URL: {url}")
             
         # Clone with depth=1 to speed up cloning for large repositories
-        # and use a longer timeout to allow for larger repositories
+        # but ensure we get all branches for proper branch selection
         logger.info(f"Cloning repository to {temp_dir}...")
         repo = Repo.clone_from(
             url, 
             temp_dir, 
             branch=branch, 
-            depth=1,  # Only get the latest commit
-            single_branch=True,  # Only get the specified branch
+            depth=1,  # Only get the latest commit, but of all branches
             env={"GIT_TERMINAL_PROMPT": "0"}  # Disable Git prompting for credentials
         )
         logger.info(f"Repository cloned successfully, HEAD is at: {repo.head.commit.hexsha}")
