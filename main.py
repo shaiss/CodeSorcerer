@@ -609,8 +609,16 @@ def check_audit_progress():
     progress_id = session.get('audit_progress_id')
     
     if not progress_id or progress_id not in audit_progress_store:
-        flash('No audit in progress', 'error')
-        return redirect(url_for('audit'))
+        # Instead of error redirection, show a progress page with initialization state
+        # This is for cases where JS might make API calls before the audit is fully registered
+        progress = AuditProgress(
+            id="initializing",
+            repo_path="",
+            branch="",
+            current_task="Initializing audit, please wait...",
+            overall_percentage=0
+        )
+        return render_template('audit_progress.html', progress=progress, initializing=True)
     
     # Get progress data
     progress = audit_progress_store[progress_id]
@@ -629,15 +637,30 @@ def api_audit_progress():
     progress_id = session.get('audit_progress_id')
     
     if not progress_id or progress_id not in audit_progress_store:
+        # Instead of returning an error, return a status indicating initialization
         return jsonify({
-            "error": "No audit in progress"
-        }), 404
+            "status": "initializing",
+            "message": "Audit is initializing, please wait...",
+            "overall_percentage": 0,
+            "current_task": "Initializing audit...",
+            "steps": {
+                "repo_validation": 0,
+                "file_gathering": 0,
+                "code_analysis": 0,
+                "report_generation": 0
+            },
+            "categories_completed": [],
+            "categories_pending": [],
+            "report_id": None,
+            "error": None
+        }), 200  # Return 200 OK, not 404
     
     # Get progress data
     progress = audit_progress_store[progress_id]
     
     # Convert progress data to JSON-serializable dict
     progress_data = {
+        "status": "in_progress",
         "overall_percentage": progress.overall_percentage,
         "current_task": progress.current_task,
         "steps": progress.steps,

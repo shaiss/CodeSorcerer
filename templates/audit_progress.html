@@ -72,7 +72,22 @@
                     <span class="badge bg-primary">{{ progress.overall_percentage }}% Complete</span>
                 </div>
                 <div class="card-body">
-                    {% if progress.error %}
+                    {% if initializing is defined and initializing %}
+                    <div class="alert alert-info">
+                        <strong>Initializing:</strong> {{ progress.current_task }}
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress">
+                            <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" style="width: 10%" 
+                                 aria-valuenow="10" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle"></i> <span id="progress-status">Starting audit, please wait...</span>
+                        </div>
+                    </div>
+                    {% elif progress.error %}
                     <div class="alert alert-danger">
                         <strong>Error:</strong> {{ progress.error }}
                     </div>
@@ -241,6 +256,15 @@
                 return response.json();
             })
             .then(data => {
+                // Check if audit is in initializing state
+                if (data.status === 'initializing') {
+                    // Show initializing message and continue polling
+                    updateStatusMessage(data.message || 'Initializing audit, please wait...');
+                    // Don't update UI yet, just wait for initialization to complete
+                    console.log('Audit is initializing, waiting...');
+                    return;
+                }
+                
                 // Update the UI with new data
                 updateProgressUI(data);
                 updateStatusMessage('Progress updated successfully.');
