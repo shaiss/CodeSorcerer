@@ -565,10 +565,11 @@
         // Remove any existing event listeners to prevent duplicates
         const oldBranchSelector = branchSelector.cloneNode(true);
         branchSelector.parentNode.replaceChild(oldBranchSelector, branchSelector);
-        branchSelector = document.getElementById('branchSelector');
+        // Get the fresh reference without reassigning to const
+        const freshBranchSelector = document.getElementById('branchSelector');
         
         // Add fresh event listener to update hidden input when selection changes
-        branchSelector.addEventListener('change', function() {
+        freshBranchSelector.addEventListener('change', function() {
             // Update the original branch input value to maintain compatibility
             const newBranch = this.value;
             document.getElementById('branch').value = newBranch;

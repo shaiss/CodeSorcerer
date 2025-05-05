@@ -57,6 +57,7 @@ def get_repository_branches(repo_path):
     """
     try:
         repo = Repo(repo_path)
+        logger.info(f"Getting branches for repository at {repo_path}")
         
         # Get remote reference to determine default branch
         default_branch = None
@@ -65,38 +66,88 @@ def get_repository_branches(repo_path):
             for ref in repo.references:
                 if ref.name == 'origin/HEAD':
                     default_branch = ref.reference.name.replace('origin/', '')
+                    logger.info(f"Found default branch from origin/HEAD: {default_branch}")
                     break
-        except Exception:
-            # Fallback if origin/HEAD doesn't exist
+        except Exception as e:
+            logger.warning(f"Error finding default branch from origin/HEAD: {e}")
+        
+        # Fallback if origin/HEAD doesn't exist
+        if not default_branch:
             # Try common default branch names
             for name in ['main', 'master']:
                 if name in [b.name for b in repo.branches]:
                     default_branch = name
+                    logger.info(f"Using common default branch name: {default_branch}")
                     break
         
         # If still no default branch, use the current HEAD
         if not default_branch and repo.active_branch:
             default_branch = repo.active_branch.name
+            logger.info(f"Using active branch as default: {default_branch}")
         
         branches = []
-        # Get all branches
-        for branch in repo.branches:
-            # Get latest commit for the branch
-            commit = next(repo.iter_commits(branch.name, max_count=1))
-            branches.append({
-                'name': branch.name,
-                'commit_hash': commit.hexsha,
-                'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
-                'commit_message': commit.message.strip().split('\n')[0],  # First line of commit message
-                'is_default': branch.name == default_branch
-            })
+        local_branches = list(repo.branches)
+        logger.info(f"Found {len(local_branches)} local branches")
+        
+        # Also get remote branches
+        remote_branches = []
+        try:
+            for remote in repo.remotes:
+                # Fetch to ensure we have remote branch info
+                remote.fetch()
+                for ref in remote.refs:
+                    # Skip HEAD reference
+                    if ref.name.endswith('/HEAD'):
+                        continue
+                    # Get branch name without remote prefix
+                    branch_name = ref.name.split('/', 1)[1]
+                    # Check if this is already a local branch
+                    if branch_name not in [b.name for b in local_branches]:
+                        remote_branches.append((branch_name, ref))
+            logger.info(f"Found {len(remote_branches)} additional remote branches")
+        except Exception as e:
+            logger.warning(f"Error fetching remote branches: {e}")
+        
+        # Process local branches
+        for branch in local_branches:
+            try:
+                # Get latest commit for the branch
+                commit = next(repo.iter_commits(branch.name, max_count=1))
+                branches.append({
+                    'name': branch.name,
+                    'commit_hash': commit.hexsha,
+                    'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                    'commit_message': commit.message.strip().split('\n')[0],  # First line of commit message
+                    'is_default': branch.name == default_branch
+                })
+                logger.debug(f"Added local branch: {branch.name}")
+            except Exception as e:
+                logger.warning(f"Error processing local branch {branch.name}: {e}")
+        
+        # Process remote branches
+        for branch_name, ref in remote_branches:
+            try:
+                # Get latest commit for remote branch
+                commit = next(repo.iter_commits(ref.name, max_count=1))
+                branches.append({
+                    'name': branch_name,
+                    'commit_hash': commit.hexsha,
+                    'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                    'commit_message': commit.message.strip().split('\n')[0],
+                    'is_default': branch_name == default_branch,
+                    'is_remote': True
+                })
+                logger.debug(f"Added remote branch: {branch_name}")
+            except Exception as e:
+                logger.warning(f"Error processing remote branch {branch_name}: {e}")
         
         # Sort branches: default branch first, then alphabetically
         branches.sort(key=lambda x: (not x['is_default'], x['name']))
         
+        logger.info(f"Returning {len(branches)} branches in total")
         return branches
     except Exception as e:
-        logger.error(f"Error getting repository branches: {e}")
+        logger.error(f"Error getting repository branches: {e}", exc_info=True)
         return []
 
 def download_github_repo(url, branch='main'):
