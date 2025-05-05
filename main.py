@@ -763,112 +763,38 @@ def run_audit():
         config_path = os.path.join(os.path.dirname(__file__), 'configs', 'near_hackathon.toml')
         config = load_config(config_path)
         
-        # Initialize AI client
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            flash('OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.', 'error')
-            return redirect(url_for('audit'))
-        
-        ai_client = AiClient(api_key=api_key, config=config)
-        
-        # Initialize repo provider with branch
-        repo_provider = RepoProvider(repo_path=repo_path, branch=branch)
-        
-        # Get files from repo
-        files = list(repo_provider.get_files())
-        
-        # Log detailed information about the files being processed
-        logger.info(f"Repository: {repo_path}, Branch: {branch}")
-        logger.info(f"Number of files retrieved: {len(files)}")
-        
-        # Log some sample file paths for debugging
-        file_paths = [f[0] for f in files[:10]]  # Get first 10 file paths
-        logger.info(f"Sample file paths: {file_paths}")
-        
-        # Check if we have enough code files for analysis
-        code_extensions = ['.js', '.ts', '.py', '.rs', '.go', '.java', '.c', '.cpp', '.jsx', '.tsx']
-        code_files = [f for f in files if os.path.splitext(f[0])[1].lower() in code_extensions]
-        
-        logger.info(f"Number of code files: {len(code_files)}")
-        
-        if len(code_files) < 3:
-            logger.warning(f"Very few code files found: {len(code_files)}. This might lead to poor analysis.")
-            flash(f"Warning: Only {len(code_files)} code files found in the repository. This might lead to poor analysis results.", 'warning')
-        
-        # Initialize repository analyzer to provide enhanced analysis
-        repo_analyzer = RepoAnalyzer(repo_path=repo_path, branch=branch)
-        
-        # Log analyzer info
-        repo_analysis = repo_analyzer.analyze()
-        logger.info(f"Repository analysis summary: {repo_analysis}")
-        
-        # Get category handlers, passing branch parameter
-        category_handlers = get_category_handlers(config, ai_client, repo_path, branch)
-        
-        # Process each category
-        results = {}
-        total_score = 0
-        total_possible = 0
-        
-        for category_name, handler in category_handlers.items():
-            logger.info(f"Processing category: {category_name}")
-            score, feedback = handler.process(files)
-            
-            max_points = config['categories'][category_name]['max_points']
-            total_possible += max_points
-            total_score += score
-            
-            results[category_name] = {
-                'score': score,
-                'max_points': max_points,
-                'feedback': feedback
-            }
-        
-        # Generate markdown report file
-        with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.md') as f:
-            temp_report_path = f.name
-        
-        reporter = MarkdownReporter()
-        reporter.generate_report(
+        # Create a progress tracker
+        progress_id = str(uuid.uuid4())
+        progress = AuditProgress(
+            id=progress_id,
             repo_path=repo_path,
-            branch=branch,
-            results=results,
-            total_score=total_score,
-            total_possible=total_possible,
-            output_path=temp_report_path
+            branch=branch
         )
         
-        # Read the report content
-        with open(temp_report_path, 'r') as f:
-            report_content = f.read()
+        # Store in global store and session
+        audit_progress_store[progress_id] = progress
+        session['audit_progress_id'] = progress_id
         
-        # Save to database
-        repo_name = os.path.basename(repo_path)
-        new_report = AuditReport(
-            repo_name=repo_name,
-            repo_path=repo_path,
-            branch=branch,
-            total_score=total_score,
-            total_possible=total_possible,
-            report_data=json.dumps(results)
+        # Initialize progress - starting repo validation
+        progress.update_step_progress(
+            AuditStep.REPO_VALIDATION, 10, 
+            "Starting repository validation..."
         )
         
-        with app.app_context():
-            db.session.add(new_report)
-            db.session.commit()
-            report_id = new_report.id
+        # Start the audit in a background thread
+        background_thread = threading.Thread(
+            target=run_audit_in_background,
+            args=(progress_id, repo_path, branch, config)
+        )
+        background_thread.daemon = True
+        background_thread.start()
         
-        # Store report ID in session for redirect
-        session['report_id'] = report_id
-        
-        # Clean up
-        os.unlink(temp_report_path)
-        
-        return redirect(url_for('view_report', report_id=report_id))
+        # Redirect to progress page
+        return redirect(url_for('audit_progress'))
         
     except Exception as e:
-        logger.exception("Error running audit")
-        flash(f'Error running audit: {str(e)}', 'error')
+        logger.exception("Error starting audit")
+        flash(f'Error starting audit: {str(e)}', 'error')
         return redirect(url_for('audit'))
 
 @app.route('/reports/<int:report_id>')
