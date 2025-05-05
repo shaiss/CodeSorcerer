@@ -1,0 +1,20 @@
+# Security Plugin
+
+[metadata]
+id = "security"
+name = "Security & Risk Management"
+version = "1.0.0"
+description = "Evaluates code for security vulnerabilities, input validation, authentication mechanisms, and protection against common attacks"
+author = "Code Sorcerer"
+requires = []
+
+[config]
+max_points = 15
+prompt_file = "security.md"
+enhanced = false
+
+[patterns]
+# Focus on security-sensitive files and patterns
+include = ["\\.js$", "\\.jsx$", "\\.ts$", "\\.tsx$", "\\.py$", "\\.rs$", "\\.sol$", "\\.go$", "\\.java$", "\\.c$", "\\.cpp$", "\\.cs$", "auth", "login", "password", "crypt", "token", "contract", "wallet", "sign", "verify", "permission", "access", "security"]
+# Exclude test files, build artifacts, and dependencies
+exclude = ["node_modules", "dist", "build", "target", "venv", "__pycache__", "test", "spec", "mock", "\\.min\\.js$", "\\.bundle\\.js$"]

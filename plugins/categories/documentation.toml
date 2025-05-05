@@ -1,0 +1,20 @@
+# Documentation Plugin
+
+[metadata]
+id = "documentation"
+name = "Documentation & Knowledge Transfer"
+version = "1.0.0"
+description = "Evaluates quality of project documentation, code comments, and ease of understanding for new developers"
+author = "Code Sorcerer"
+requires = []
+
+[config]
+max_points = 12
+prompt_file = "documentation.md"
+enhanced = false
+
+[patterns]
+# Focus on documentation files, README files, inline code comments, etc.
+include = ["README\\.md$", "\\.(md|txt)$", "docs/", "documentation/", "wiki/", "guide", "tutorial", "example", "\\.js$", "\\.jsx$", "\\.ts$", "\\.tsx$", "\\.py$", "\\.rs$", "\\.sol$"]
+# Exclude test files, build artifacts, and dependencies
+exclude = ["node_modules", "dist", "build", "target", "venv", "__pycache__", "\\.min\\.js$", "\\.bundle\\.js$", "\\.pyc$"]
