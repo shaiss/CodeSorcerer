@@ -1,0 +1,59 @@
+2025-05-05 23:29:16,084 - main - INFO - Downloading GitHub repository for validation: https://github.com/wootzapp/wootz-browser
+2025-05-05 23:29:16,084 - audit_near.providers.github_provider - INFO - Downloading GitHub repository: https://github.com/wootzapp/wootz-browser, branch: main, fetch_all_branches: True
+2025-05-05 23:29:16,084 - audit_near.providers.github_provider - INFO - Created temporary directory: /tmp/audit_near_wootz-browser_20250505_232916_61o8ixu9
+2025-05-05 23:29:16,084 - audit_near.providers.github_provider - INFO - Using GitHub URL: https://github.com/wootzapp/wootz-browser.git
+2025-05-05 23:29:16,084 - audit_near.providers.github_provider - INFO - Cloning repository to /tmp/audit_near_wootz-browser_20250505_232916_61o8ixu9 with options: {'url': 'https://github.com/wootzapp/wootz-browser.git', 'to_path': '/tmp/audit_near_wootz-browser_20250505_232916_61o8ixu9', 'branch': 'main', 'depth': 1, 'env': {'GIT_TERMINAL_PROMPT': '0'}}
+2025-05-05 23:29:16,087 - git.cmd - DEBUG - Popen(['git', 'clone', '-v', '--branch=main', '--depth=1', '--', 'https://github.com/wootzapp/wootz-browser.git', '/tmp/audit_near_wootz-browser_20250505_232916_61o8ixu9'], cwd=/home/runner/workspace, stdin=None, shell=False, universal_newlines=True)
+2025-05-05 23:29:16,816 - git.repo.base - DEBUG - Cmd(['git', 'clone', '-v', '--branch=main', '--depth=1', '--', 'https://github.com/wootzapp/wootz-browser.git', '/tmp/audit_near_wootz-browser_20250505_232916_61o8ixu9'])'s unused stdout: 
+2025-05-05 23:29:16,819 - git.cmd - DEBUG - Popen(['git', 'cat-file', '--batch-check'], cwd=/tmp/audit_near_wootz-browser_20250505_232916_61o8ixu9, stdin=<valid stream>, shell=False, universal_newlines=False)
+2025-05-05 23:29:16,821 - audit_near.providers.github_provider - INFO - Repository cloned successfully, HEAD is at: e581b4506daf01187ccc402b049ed5666aeeb02a
+2025-05-05 23:29:16,821 - audit_near.providers.github_provider - INFO - Fetching additional branch information...
+[2025-05-05 23:29:27 +0000] [1987] [INFO] Handling signal: winch
+[2025-05-05 23:29:47 +0000] [1987] [CRITICAL] WORKER TIMEOUT (pid:1998)
+[2025-05-05 23:29:47 +0000] [1998] [ERROR] Error handling request /validate-repository?path=https%3A%2F%2Fgithub.com%2Fwootzapp%2Fwootz-browser&is_github=true&branch=main
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/main.py", line 456, in validate_repository_endpoint
+    temp_repo_path = download_github_repo(repo_path, branch, fetch_all_branches=True)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/audit_near/providers/github_provider.py", line 293, in download_github_repo
+    subprocess.run(
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/subprocess.py", line 2115, in _communicate
+    ready = selector.select(timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/selectors.py", line 415, in select
+    fd_event_list = self._selector.poll(timeout)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-05-05 23:29:47 +0000] [1998] [INFO] Worker exiting (pid: 1998)
+[2025-05-05 23:29:47 +0000] [2182] [INFO] Booting worker with pid: 2182
+2025-05-05 23:29:47,880 - main - INFO - Database tables recreated
+2025-05-05 23:29:49,197 - git.cmd - DEBUG - Popen(['git', 'version'], cwd=/home/runner/workspace, stdin=None, shell=False, universal_newlines=False)
+2025-05-05 23:29:49,201 - git.cmd - DEBUG - Popen(['git', 'version'], cwd=/home/runner/workspace, stdin=None, shell=False, universal_newlines=False)
