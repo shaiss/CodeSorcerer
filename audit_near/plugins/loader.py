@@ -62,13 +62,23 @@ class CategoryPluginLoader:
         
         loaded_plugins = []
         
-        # Load all TOML files in the plugins directory
-        for filename in os.listdir(self.plugins_dir):
-            if filename.endswith(".toml"):
-                plugin_path = os.path.join(self.plugins_dir, filename)
-                plugin_id = self.load_plugin(plugin_path)
-                if plugin_id:
-                    loaded_plugins.append(plugin_id)
+        # Load plugins from the main plugins directory and categories subdirectory
+        plugin_dirs = [
+            self.plugins_dir,
+            os.path.join(self.plugins_dir, "categories")
+        ]
+        
+        for plugin_dir in plugin_dirs:
+            if not os.path.exists(plugin_dir):
+                continue
+                
+            # Load all TOML files in the directory
+            for filename in os.listdir(plugin_dir):
+                if filename.endswith(".toml"):
+                    plugin_path = os.path.join(plugin_dir, filename)
+                    plugin_id = self.load_plugin(plugin_path)
+                    if plugin_id:
+                        loaded_plugins.append(plugin_id)
         
         self.logger.info(f"Loaded {len(loaded_plugins)} plugins: {', '.join(loaded_plugins)}")
         return loaded_plugins
@@ -283,6 +293,11 @@ class CategoryPluginLoader:
             if not os.path.exists(self.plugins_dir):
                 os.makedirs(self.plugins_dir, exist_ok=True)
             
+            # Create categories subdirectory if it doesn't exist
+            categories_dir = os.path.join(self.plugins_dir, "categories")
+            if not os.path.exists(categories_dir):
+                os.makedirs(categories_dir, exist_ok=True)
+            
             # Determine destination filename
             if dest_filename is None:
                 dest_filename = os.path.basename(plugin_file_path)
@@ -291,7 +306,8 @@ class CategoryPluginLoader:
             if not dest_filename.endswith(".toml"):
                 dest_filename += ".toml"
             
-            dest_path = os.path.join(self.plugins_dir, dest_filename)
+            # Install to the categories subdirectory
+            dest_path = os.path.join(categories_dir, dest_filename)
             
             # Copy the file
             with open(plugin_file_path, "rb") as src:
@@ -317,7 +333,7 @@ class CategoryPluginLoader:
                 if os.path.exists(prompt_path):
                     with open(prompt_path, "rb") as prompt_src:
                         prompt_content = prompt_src.read()
-                        dest_prompt_path = os.path.join(self.plugins_dir, prompt_file)
+                        dest_prompt_path = os.path.join(categories_dir, prompt_file)
                         with open(dest_prompt_path, "wb") as prompt_dest:
                             prompt_dest.write(prompt_content)
                 
@@ -343,27 +359,64 @@ class CategoryPluginLoader:
             True if uninstalled successfully, False otherwise
         """
         try:
+            # Plugin directories to search
+            plugin_dirs = [
+                self.plugins_dir,
+                os.path.join(self.plugins_dir, "categories")
+            ]
+            
             # Find the plugin file
             plugin_file = None
-            for filename in os.listdir(self.plugins_dir):
-                if filename.endswith(".toml"):
-                    plugin_path = os.path.join(self.plugins_dir, filename)
-                    with open(plugin_path, "rb") as f:
-                        try:
-                            config = tomli.load(f)
-                            if config.get("metadata", {}).get("id") == plugin_id:
-                                plugin_file = filename
-                                break
-                        except Exception:
-                            continue
+            plugin_dir = None
             
-            if not plugin_file:
+            for current_dir in plugin_dirs:
+                if not os.path.exists(current_dir):
+                    continue
+                    
+                for filename in os.listdir(current_dir):
+                    if filename.endswith(".toml"):
+                        plugin_path = os.path.join(current_dir, filename)
+                        with open(plugin_path, "rb") as f:
+                            try:
+                                config = tomli.load(f)
+                                if config.get("metadata", {}).get("id") == plugin_id:
+                                    plugin_file = filename
+                                    plugin_dir = current_dir
+                                    break
+                            except Exception:
+                                continue
+                
+                if plugin_file:
+                    break
+            
+            if not plugin_file or not plugin_dir:
                 self.logger.error(f"Plugin not found: {plugin_id}")
                 return False
             
             # Remove the plugin file
-            plugin_path = os.path.join(self.plugins_dir, plugin_file)
+            plugin_path = os.path.join(plugin_dir, plugin_file)
+            
+            # Try to get the prompt file name before removing the plugin
+            prompt_file = None
+            try:
+                with open(plugin_path, "rb") as f:
+                    config = tomli.load(f)
+                    prompt_file = config.get("config", {}).get("prompt_file")
+            except Exception:
+                pass
+                
+            # Remove the plugin file
             os.remove(plugin_path)
+            
+            # Try to remove associated prompt file if it exists
+            if prompt_file:
+                prompt_path = os.path.join(plugin_dir, prompt_file)
+                if os.path.exists(prompt_path):
+                    try:
+                        os.remove(prompt_path)
+                        self.logger.info(f"Removed associated prompt file: {prompt_file}")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to remove prompt file: {str(e)}")
             
             # Unregister the plugin
             if registry.unregister(plugin_id):

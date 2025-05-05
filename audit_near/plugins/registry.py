@@ -91,6 +91,15 @@ class CategoryRegistry:
             List of category IDs
         """
         return list(self._categories.keys())
+        
+    def get_all_category_ids(self) -> List[str]:
+        """
+        Get all registered category IDs.
+        
+        Returns:
+            List of all category IDs in the registry
+        """
+        return list(self._categories.keys())
     
     def get_all_categories(self) -> Dict[str, Dict[str, Any]]:
         """

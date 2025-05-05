@@ -825,6 +825,15 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
         if not api_key:
             progress.set_error('OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.')
             return
+            
+        # Make sure plugins are loaded before starting
+        from audit_near.plugins.loader import loader
+        from audit_near.plugins.management import init_plugins_directory
+        
+        # Initialize the plugins directory and load all plugins
+        init_plugins_directory()
+        loaded_plugins = loader.load_plugins()
+        logger.info(f"Loaded {len(loaded_plugins)} plugins before audit: {', '.join(loaded_plugins)}")
         
         # Update progress - Repo validation (10%)
         progress.update_step_progress(
