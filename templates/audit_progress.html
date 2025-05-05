@@ -87,6 +87,27 @@
                             <i class="bi bi-info-circle"></i> <span id="progress-status">Starting audit, please wait...</span>
                         </div>
                     </div>
+                    
+                    <div class="category-list mt-4">
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Category Progress</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="border-bottom pb-2 mb-3">Completed Categories</h6>
+                                        <div class="text-muted" id="completed-categories-empty">No categories completed yet</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <h6 class="border-bottom pb-2 mb-3">Pending Categories</h6>
+                                        <div class="text-muted" id="pending-categories-empty">Categories will appear when code analysis begins</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {% elif progress.error %}
                     <div class="alert alert-danger">
                         <strong>Error:</strong> {{ progress.error }}
@@ -141,40 +162,50 @@
                             <h5>Current Task: <span class="text-primary">{{ progress.current_task }}</span></h5>
                         </div>
                         
-                        {% if progress.categories_completed or progress.categories_pending %}
                         <div class="category-list mt-4">
-                            <h5>Category Progress:</h5>
-                            <div class="row">
-                                {% if progress.categories_completed %}
-                                <div class="col-md-6">
-                                    <h6>Completed Categories:</h6>
-                                    <ul class="list-group">
-                                        {% for category in progress.categories_completed %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            {{ category.name }}
-                                            <span class="badge bg-success rounded-pill">{{ category.score }} / {{ category.max_points }}</span>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
+                            <div class="card mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Category Progress</h5>
                                 </div>
-                                {% endif %}
-                                
-                                {% if progress.categories_pending %}
-                                <div class="col-md-6">
-                                    <h6>Pending Categories:</h6>
-                                    <ul class="list-group">
-                                        {% for category in progress.categories_pending %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            {{ category.name }}
-                                            <span class="badge bg-secondary rounded-pill">Pending</span>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="border-bottom pb-2 mb-3">Completed Categories</h6>
+                                            {% if progress.categories_completed %}
+                                            <ul class="list-group" id="completed-categories">
+                                                {% for category in progress.categories_completed %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span class="category-name">{{ category.name }}</span>
+                                                    <span class="badge bg-success rounded-pill">{{ category.score }} / {{ category.max_points }}</span>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% else %}
+                                            <div class="text-muted" id="completed-categories-empty">No categories completed yet</div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <h6 class="border-bottom pb-2 mb-3">Pending Categories</h6>
+                                            {% if progress.categories_pending %}
+                                            <ul class="list-group" id="pending-categories">
+                                                {% for category in progress.categories_pending %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span class="category-name">{{ category.name }}</span>
+                                                    <span class="badge bg-secondary rounded-pill">Pending</span>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% elif progress.steps.code_analysis < 5 %}
+                                            <div class="text-muted" id="pending-categories-empty">Categories will appear here when the code analysis begins</div>
+                                            {% else %}
+                                            <div class="text-muted" id="pending-categories-empty">All categories completed!</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                                {% endif %}
                             </div>
                         </div>
-                        {% endif %}
                         
                         {% if progress.overall_percentage >= 100 %}
                         <div class="mt-4">
@@ -363,48 +394,82 @@
     
     // Update categories UI with new data
     function updateCategoriesUI(completedCategories, pendingCategories) {
-        // Update completed categories
+        // Handle completed categories
         const completedContainer = document.getElementById('completed-categories');
-        if (completedContainer && completedCategories && completedCategories.length > 0) {
+        const completedEmptyMsg = document.getElementById('completed-categories-empty');
+        
+        if (completedCategories && completedCategories.length > 0) {
             // Create new list items
             const newHtml = completedCategories.map(category => `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${category.name}
+                    <span class="category-name">${category.name}</span>
                     <span class="badge bg-success rounded-pill">${category.score} / ${category.max_points}</span>
                 </li>
             `).join('');
             
-            // Update only if content has changed
-            if (completedContainer.innerHTML.trim() !== newHtml.trim()) {
-                fadeUpdate(completedContainer, () => {
-                    completedContainer.innerHTML = newHtml;
-                });
+            // Show the list, hide the empty message
+            if (completedContainer) {
+                if (completedContainer.innerHTML.trim() !== newHtml.trim()) {
+                    fadeUpdate(completedContainer, () => {
+                        completedContainer.innerHTML = newHtml;
+                    });
+                }
+                completedContainer.style.display = 'block';
+            }
+            if (completedEmptyMsg) {
+                completedEmptyMsg.style.display = 'none';
+            }
+        } else {
+            // Hide the list, show the empty message
+            if (completedContainer) {
+                completedContainer.style.display = 'none';
+            }
+            if (completedEmptyMsg) {
+                completedEmptyMsg.style.display = 'block';
             }
         }
         
-        // Update pending categories
+        // Handle pending categories
         const pendingContainer = document.getElementById('pending-categories');
-        if (pendingContainer && pendingCategories && pendingCategories.length > 0) {
+        const pendingEmptyMsg = document.getElementById('pending-categories-empty');
+        
+        if (pendingCategories && pendingCategories.length > 0) {
             // Create new list items
             const newHtml = pendingCategories.map(category => `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${category.name}
+                    <span class="category-name">${category.name}</span>
                     <span class="badge bg-secondary rounded-pill">Pending</span>
                 </li>
             `).join('');
             
-            // Update only if content has changed
-            if (pendingContainer.innerHTML.trim() !== newHtml.trim()) {
-                fadeUpdate(pendingContainer, () => {
-                    pendingContainer.innerHTML = newHtml;
-                });
+            // Show the list, hide the empty message
+            if (pendingContainer) {
+                if (pendingContainer.innerHTML.trim() !== newHtml.trim()) {
+                    fadeUpdate(pendingContainer, () => {
+                        pendingContainer.innerHTML = newHtml;
+                    });
+                }
+                pendingContainer.style.display = 'block';
             }
-        }
-        
-        // Show or hide category row based on content
-        const categoryRow = document.querySelector('.category-list');
-        if (categoryRow) {
-            categoryRow.style.display = (completedCategories.length > 0 || pendingCategories.length > 0) ? 'block' : 'none';
+            if (pendingEmptyMsg) {
+                pendingEmptyMsg.style.display = 'none';
+            }
+        } else {
+            // Hide the list, show appropriate empty message
+            if (pendingContainer) {
+                pendingContainer.style.display = 'none';
+            }
+            
+            if (pendingEmptyMsg) {
+                // Show message based on completed categories
+                if (completedCategories && completedCategories.length > 0) {
+                    pendingEmptyMsg.textContent = "All categories completed!";
+                } else {
+                    pendingEmptyMsg.textContent = "Categories will appear when code analysis begins";
+                }
+                
+                pendingEmptyMsg.style.display = 'block';
+            }
         }
     }
     
