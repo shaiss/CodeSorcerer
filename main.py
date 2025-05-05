@@ -838,10 +838,15 @@ def run_audit():
         
         # Create a progress tracker
         progress_id = str(uuid.uuid4())
+        
+        # Get the repository name - prefer original_repo_name for GitHub repositories
+        repo_name = session.get('original_repo_name') or session.get('repo_name') or os.path.basename(repo_path)
+        
         progress = AuditProgress(
             id=progress_id,
             repo_path=repo_path,
-            branch=branch
+            branch=branch,
+            repo_name=repo_name  # Set the repository name for reports
         )
         
         # Store in global store and session
