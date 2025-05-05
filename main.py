@@ -56,11 +56,15 @@ class AuditReport(db.Model):
     total_score = db.Column(db.Float, nullable=False)
     total_possible = db.Column(db.Float, nullable=False)
     report_data = db.Column(db.Text, nullable=False)  # JSON string
+    repo_metadata = db.Column(db.Text, nullable=True) # JSON string for repository metadata
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
 # Create tables
 with app.app_context():
+    # Recreate tables (this will drop and recreate tables if schema has changed)
+    db.drop_all()
     db.create_all()
+    logger.info("Database tables recreated")
 
 # Import audit functionality
 from audit_near.cli import load_config, get_category_handlers
@@ -68,7 +72,8 @@ from audit_near.ai_client import AiClient
 from audit_near.providers.repo_provider import RepoProvider
 from audit_near.providers.repo_analyzer import RepoAnalyzer
 from audit_near.providers.github_provider import (
-    is_github_url, download_github_repo, extract_repo_name_from_url, get_repository_branches
+    is_github_url, download_github_repo, extract_repo_name_from_url, 
+    get_repository_branches, get_repo_metadata
 )
 from audit_near.reporters.markdown_reporter import MarkdownReporter
 
@@ -763,7 +768,29 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
         
         # Update progress - Report generation (start)
         progress.update_step_progress(
-            AuditStep.REPORT_GENERATION, 25, 
+            AuditStep.REPORT_GENERATION, 20, 
+            "Collecting repository metadata..."
+        )
+        
+        # Get repository metadata
+        original_url = None
+        if hasattr(progress, 'github_url'):
+            original_url = progress.github_url
+        else:
+            # Try to get GitHub URL from session
+            try:
+                with app.app_context():
+                    original_url = session.get('github_url')
+            except:
+                pass
+        
+        # Collect repository metadata
+        repo_metadata = get_repo_metadata(repo_path, original_url)
+        logger.info(f"Collected repository metadata: {json.dumps(repo_metadata)}")
+        
+        # Update progress
+        progress.update_step_progress(
+            AuditStep.REPORT_GENERATION, 40, 
             "Generating audit report..."
         )
         
@@ -778,12 +805,13 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
             results=results,
             total_score=total_score,
             total_possible=total_possible,
-            output_path=temp_report_path
+            output_path=temp_report_path,
+            metadata=repo_metadata
         )
         
         # Update progress - Report generation (50%)
         progress.update_step_progress(
-            AuditStep.REPORT_GENERATION, 50, 
+            AuditStep.REPORT_GENERATION, 60, 
             "Saving report to database..."
         )
         
@@ -803,6 +831,10 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
             except:
                 # Fall back to basename if session access fails
                 pass
+        
+        # Use repository metadata if available
+        if not repo_name and repo_metadata.get('repo_name'):
+            repo_name = repo_metadata['repo_name']
                 
         if not repo_name:
             # Last resort fallback
@@ -814,7 +846,8 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
             branch=branch,
             total_score=total_score,
             total_possible=total_possible,
-            report_data=json.dumps(results)
+            report_data=json.dumps(results),
+            repo_metadata=json.dumps(repo_metadata)
         )
         
         # Update progress - Report generation (75%)
@@ -953,6 +986,15 @@ def download_report(report_id):
     with app.app_context():
         report = AuditReport.query.get_or_404(report_id)
         results = json.loads(report.report_data)
+        
+        # Parse repo metadata if available
+        repo_metadata = None
+        if report.repo_metadata:
+            try:
+                repo_metadata = json.loads(report.repo_metadata)
+                logger.info(f"Loaded repository metadata for report {report_id}")
+            except Exception as e:
+                logger.error(f"Error parsing repository metadata: {e}")
     
     # Generate markdown report file
     with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.md') as f:
@@ -965,7 +1007,8 @@ def download_report(report_id):
         results=results,
         total_score=report.total_score,
         total_possible=report.total_possible,
-        output_path=temp_report_path
+        output_path=temp_report_path,
+        metadata=repo_metadata
     )
     
     return_value = send_file(

@@ -227,3 +227,131 @@ def extract_repo_name_from_url(url):
     
     # Fallback: use the URL if we couldn't parse it
     return url
+
+def extract_owner_from_url(url):
+    """
+    Extract the owner (username or org) from a GitHub URL.
+    
+    Args:
+        url (str): GitHub repository URL
+        
+    Returns:
+        str: Owner name or None if not found
+    """
+    # Handle SSH URLs
+    if url.startswith('git@'):
+        match = re.search(r'git@github\.com:([\w-]+)/[\w.-]+/?\.git$', url)
+        if match:
+            return match.group(1)
+    
+    # Handle HTTPS URLs
+    parsed_url = urlparse(url)
+    path_parts = parsed_url.path.strip('/').split('/')
+    
+    if len(path_parts) >= 2:
+        return path_parts[0]
+    
+    return None
+
+def get_repo_metadata(repo_path, original_url=None):
+    """
+    Get metadata for a repository including description, avatar URL, 
+    stars, forks, and other information.
+    
+    Args:
+        repo_path (str): Path to the local repository
+        original_url (str, optional): Original GitHub URL if available
+        
+    Returns:
+        dict: Repository metadata
+    """
+    metadata = {
+        "description": None,
+        "avatar_url": None,
+        "owner": None,
+        "repo_name": None,
+        "default_branch": None,
+        "stars": None,
+        "forks": None,
+        "commits": 0,
+        "contributors": [],
+        "last_commit_date": None,
+        "languages": {},
+        "source_url": original_url
+    }
+    
+    try:
+        repo = Repo(repo_path)
+        
+        # Try to get description from repository config
+        try:
+            metadata["description"] = repo.description
+        except:
+            pass
+        
+        # Get default branch information
+        for ref in repo.references:
+            if ref.name == 'origin/HEAD':
+                metadata["default_branch"] = ref.reference.name.replace('origin/', '')
+                break
+        
+        # Fallback if origin/HEAD doesn't exist
+        if not metadata["default_branch"]:
+            # Try common default branch names
+            for name in ['main', 'master']:
+                if name in [b.name for b in repo.branches]:
+                    metadata["default_branch"] = name
+                    break
+        
+        # If still no default branch, use the current HEAD
+        if not metadata["default_branch"] and repo.active_branch:
+            metadata["default_branch"] = repo.active_branch.name
+        
+        # Count commits
+        try:
+            metadata["commits"] = sum(1 for _ in repo.iter_commits())
+        except:
+            pass
+        
+        # Get last commit date
+        try:
+            last_commit = next(repo.iter_commits())
+            metadata["last_commit_date"] = last_commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            pass
+        
+        # Get contributor information
+        try:
+            contributors = set()
+            for commit in repo.iter_commits():
+                author = f"{commit.author.name} <{commit.author.email}>"
+                contributors.add(author)
+            metadata["contributors"] = list(contributors)
+        except:
+            pass
+            
+        # If we have a GitHub URL, extract owner and repo name
+        if original_url and is_github_url(original_url):
+            metadata["owner"] = extract_owner_from_url(original_url)
+            metadata["repo_name"] = extract_repo_name_from_url(original_url)
+            
+            # Generate avatar URL for the owner
+            if metadata["owner"]:
+                metadata["avatar_url"] = f"https://github.com/{metadata['owner']}.png"
+                
+            # Generate source URL if not already set
+            if not metadata["source_url"]:
+                metadata["source_url"] = f"https://github.com/{metadata['owner']}/{metadata['repo_name']}"
+        else:
+            # Use the basename as repo name for local repositories
+            metadata["repo_name"] = os.path.basename(repo_path)
+        
+        return metadata
+    except Exception as e:
+        logger.error(f"Error getting repository metadata: {e}", exc_info=True)
+        
+        # For local repositories with no remote, at least get the directory name
+        if not metadata["repo_name"]:
+            metadata["repo_name"] = os.path.basename(repo_path)
+        
+        return metadata

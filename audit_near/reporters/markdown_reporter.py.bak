@@ -7,7 +7,7 @@ This module implements a reporter that generates a Markdown report from audit re
 import logging
 import os
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List, Tuple, Optional, Any
 
 
 class MarkdownReporter:
@@ -29,7 +29,7 @@ class MarkdownReporter:
         total_score: int,
         total_possible: int,
         output_path: str,
-        metadata=None,
+        metadata: dict = None,
     ) -> None:
         """
         Generate a Markdown report from audit results.
