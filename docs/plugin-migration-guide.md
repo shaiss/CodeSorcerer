@@ -39,7 +39,7 @@ author = "Code Sorcerer"
 requires = []                    # Dependencies on other categories, if any
 
 [config]
-max_points = 10                  # IMPORTANT: Must be between 1-10 per validation rules
+max_points = 20                  # Maximum points (1-100, recommended: 5-25 based on importance)
 prompt_file = "category_id.md"   # Name of the markdown prompt file
 enhanced = true                  # Use true for better file selection logic
 
@@ -58,8 +58,9 @@ exclude = [
 ```
 
 > **IMPORTANT**: 
-> - The validation system enforces max_points to be between 1-10
-> - If the existing category uses more points, you'll need to adjust the scoring scale
+> - The system supports flexible point ranges (1-100) to accommodate different category weightings
+> - Choose a max_points value that reflects the category's relative importance (recommended: 5-25)
+> - Ensure scoring guidelines in the prompt file align with the chosen max_points value
 
 ### 3. Create Plugin Markdown Prompt
 
@@ -99,9 +100,9 @@ Provide your assessment in the following JSON format:
 
 If the original category used a different point scale:
 
-1. Adjust scoring guidelines in the markdown file
-2. Set `max_points = 10` in the TOML file (or lower if appropriate)
-3. Document the change in the category description
+1. Adjust scoring guidelines in the markdown file to match the chosen max_points value
+2. Choose an appropriate max_points value that reflects the category's importance
+3. Document the scoring scale in the category description
 
 ### 5. Test the Plugin
 
@@ -112,7 +113,7 @@ If the original category used a different point scale:
 
 ### 6. Address Common Issues
 
-- **Invalid max_points**: The validation enforces 1-10 for max_points
+- **Invalid max_points**: The validation enforces max_points to be between 1-100
 - **Missing prompt file**: Ensure the prompt file name matches the one in the config
 - **Path resolution**: Plugin markdown files must be in plugins/categories/
 - **Duplicate categories**: If both legacy and plugin versions appear, adjust priority

@@ -45,8 +45,8 @@ class MarkdownReporter:
         """
         self.logger.info(f"Generating Markdown report to {output_path}")
         
-        # Calculate percentage score
-        percentage = (total_score / total_possible) * 100 if total_possible > 0 else 0
+        # Calculate percentage score using the normalization function
+        percentage = self._normalize_score(total_score, total_possible)
         
         # Determine overall rating
         rating = self._get_rating(percentage)
@@ -147,11 +147,13 @@ class MarkdownReporter:
             f"|----------|-------|------------|------------|",
         ])
         
-        # Add category scores to the table
+        # Add category scores to the table with normalized percentages
         for category_name, category_data in results.items():
             score = category_data["score"]
             max_points = category_data["max_points"]
-            category_percentage = (score / max_points) * 100 if max_points > 0 else 0
+            
+            # Calculate normalized percentage for consistent comparison across categories
+            category_percentage = self._normalize_score(score, max_points)
             
             display_name = category_name.replace("_", " ").title()
             report.append(f"| {display_name} | {score} | {max_points} | {category_percentage:.1f}% |")
@@ -186,6 +188,23 @@ class MarkdownReporter:
             self.logger.error(f"Error writing Markdown report to {output_path}: {e}")
             raise
 
+    def _normalize_score(self, score: int, max_points: int) -> float:
+        """
+        Calculate a normalized percentage score.
+        
+        Args:
+            score: Raw score value
+            max_points: Maximum possible points
+            
+        Returns:
+            Normalized percentage (0-100)
+        """
+        if max_points <= 0:
+            return 0.0
+        
+        # Simple percentage calculation
+        return (score / max_points) * 100
+    
     def _get_rating(self, percentage: float) -> str:
         """
         Get a rating based on the percentage score.
