@@ -118,7 +118,7 @@
                             <select class="form-select" id="bundle" name="bundle">
                                 <option value="">-- Custom Configuration --</option>
                                 {% for bundle in available_bundles %}
-                                <option value="{{ bundle.id }}">{{ bundle.name }} - {{ bundle.description }}</option>
+                                <option value="{{ bundle.id }}" data-categories="{{ bundle.categories|tojson }}">{{ bundle.name }} - {{ bundle.description }}</option>
                                 {% endfor %}
                             </select>
                             <div class="form-text">Bundles are predefined sets of categories optimized for specific use cases</div>
@@ -324,6 +324,55 @@
             browseButton.style.display = 'none';
             inputTypeIcon.className = 'bi bi-github';
             repoPathHelp.innerHTML = 'Enter a GitHub repository URL (https://github.com/username/repo). <span class="badge bg-info ms-1">New!</span>';
+        }
+    }
+    
+    // Handle bundle selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const bundleSelect = document.getElementById('bundle');
+        if (bundleSelect) {
+            bundleSelect.addEventListener('change', updateCategorySelectionFromBundle);
+        }
+    });
+    
+    // Update category checkboxes based on selected bundle
+    function updateCategorySelectionFromBundle() {
+        const bundleSelect = document.getElementById('bundle');
+        const selectedBundle = bundleSelect.value;
+        
+        if (!selectedBundle) {
+            // No bundle selected, don't modify category selections
+            document.getElementById('categorySelection').style.display = 'block';
+            return;
+        }
+        
+        // Clear all category selections first
+        document.querySelectorAll('input[name="categories"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Get the bundle data
+        const bundleOptions = bundleSelect.options;
+        const selectedOption = bundleOptions[bundleSelect.selectedIndex];
+        const categoriesStr = selectedOption.getAttribute('data-categories');
+        
+        if (categoriesStr) {
+            try {
+                const categories = JSON.parse(categoriesStr);
+                
+                // Check the checkboxes for categories in the bundle
+                categories.forEach(category => {
+                    const checkbox = document.getElementById(`cat_${category}`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+                
+                // Hide the category selection if a bundle is selected
+                document.getElementById('categorySelection').style.display = 'none';
+            } catch (e) {
+                console.error('Error parsing bundle categories:', e);
+            }
         }
     }
     
