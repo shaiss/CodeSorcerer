@@ -135,7 +135,11 @@ def audit():
                 if "metadata" in bundle_data:
                     # Filter categories to include only those set to true
                     bundle_categories = bundle_data.get("categories", {})
+                    # Log the categories from the bundle
+                    logger.info(f"Bundle {bundle_file.stem} categories: {bundle_categories}")
+                    
                     enabled_categories = [key for key, value in bundle_categories.items() if value is True]
+                    logger.info(f"Bundle {bundle_file.stem} enabled categories: {enabled_categories}")
                     
                     available_bundles.append({
                         "id": bundle_file.stem,
@@ -299,6 +303,10 @@ def audit():
     if os.path.isdir(test_repos_dir):
         sample_repos = [os.path.join(test_repos_dir, d) for d in os.listdir(test_repos_dir) 
                       if os.path.isdir(os.path.join(test_repos_dir, d))]
+    
+    # Log the bundles that will be rendered in the template
+    for bundle in available_bundles:
+        logger.info(f"Rendering bundle: {bundle['id']} with categories: {bundle['categories']}")
     
     return render_template('audit_form.html', 
                           sample_repos=sample_repos,
