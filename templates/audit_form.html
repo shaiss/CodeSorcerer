@@ -366,8 +366,8 @@
                     }
                 });
                 
-                // Hide the category selection if a bundle is selected
-                document.getElementById('categorySelection').style.display = 'none';
+                // Keep the category selection visible even when a bundle is selected
+                // This allows users to see which categories are in the bundle and add additional ones
             } catch (e) {
                 console.error('Error parsing bundle categories:', e);
             }
