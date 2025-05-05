@@ -832,7 +832,11 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
             return
         
         # Import required modules for plugin loading
-        import tomli
+        try:
+            import tomllib  # Python 3.11+
+        except ImportError:
+            import tomli as tomllib  # Before Python 3.11
+            
         from audit_near.plugins.loader import loader
         from audit_near.plugins.management import init_plugins_directory
         from audit_near.plugins.registry import registry
