@@ -98,7 +98,7 @@ class CategoryPluginLoader:
             
             # Parse the TOML file
             with open(plugin_path, "rb") as f:
-                config = tomli.load(f)
+                config = tomllib.load(f)
             
             # Get the plugin directory
             plugin_dir = os.path.dirname(plugin_path)
@@ -314,7 +314,7 @@ class CategoryPluginLoader:
                 content = src.read()
                 
                 # Try to parse and validate before saving
-                config = tomli.loads(content.decode('utf-8'))
+                config = tomllib.loads(content.decode('utf-8'))
                 temp_dir = os.path.dirname(plugin_file_path)
                 errors = validate_plugin_config(config, temp_dir)
                 
@@ -378,7 +378,7 @@ class CategoryPluginLoader:
                         plugin_path = os.path.join(current_dir, filename)
                         with open(plugin_path, "rb") as f:
                             try:
-                                config = tomli.load(f)
+                                config = tomllib.load(f)
                                 if config.get("metadata", {}).get("id") == plugin_id:
                                     plugin_file = filename
                                     plugin_dir = current_dir
@@ -400,7 +400,7 @@ class CategoryPluginLoader:
             prompt_file = None
             try:
                 with open(plugin_path, "rb") as f:
-                    config = tomli.load(f)
+                    config = tomllib.load(f)
                     prompt_file = config.get("config", {}).get("prompt_file")
             except Exception:
                 pass

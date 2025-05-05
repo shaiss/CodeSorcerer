@@ -92,8 +92,13 @@ def audit():
     # Import the registry and plugin loader
     from audit_near.plugins.registry import registry
     from audit_near.plugins.management import init_plugins_directory, discover_plugins
-    import tomli
     from pathlib import Path
+    
+    # Python 3.11+ includes tomllib in the standard library
+    try:
+        import tomllib  # Python 3.11+
+    except ImportError:
+        import tomli as tomllib  # Before Python 3.11
     
     # Initialize plugins directory and load plugins
     init_plugins_directory()
@@ -120,7 +125,7 @@ def audit():
         for bundle_file in bundles_dir.glob("*.toml"):
             try:
                 with open(bundle_file, "rb") as f:
-                    bundle_data = tomli.load(f)
+                    bundle_data = tomllib.load(f)
                 
                 if "metadata" in bundle_data:
                     available_bundles.append({
@@ -209,7 +214,7 @@ def audit():
             if bundle_path.exists():
                 try:
                     with open(bundle_path, "rb") as f:
-                        bundle_data = tomli.load(f)
+                        bundle_data = tomllib.load(f)
                     
                     # Add all enabled categories from the bundle
                     if "categories" in bundle_data:
