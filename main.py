@@ -133,11 +133,15 @@ def audit():
                     bundle_data = tomllib.load(f)
                 
                 if "metadata" in bundle_data:
+                    # Filter categories to include only those set to true
+                    bundle_categories = bundle_data.get("categories", {})
+                    enabled_categories = [key for key, value in bundle_categories.items() if value is True]
+                    
                     available_bundles.append({
                         "id": bundle_file.stem,
                         "name": bundle_data["metadata"].get("name", bundle_file.stem),
                         "description": bundle_data["metadata"].get("description", ""),
-                        "categories": list(bundle_data.get("categories", {}).keys())
+                        "categories": enabled_categories
                     })
             except Exception as e:
                 logger.error(f"Error loading bundle {bundle_file}: {e}")
