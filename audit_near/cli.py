@@ -11,7 +11,10 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import tomli
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    import tomli as tomllib  # Before Python 3.11
 
 from audit_near.ai_client import AiClient
 from audit_near.categories.blockchain_integration import BlockchainIntegration
@@ -96,13 +99,13 @@ def load_config(config_path: Optional[str]) -> Dict:
     
     try:
         with open(config_path, "rb") as f:
-            config = tomli.load(f)
+            config = tomllib.load(f)
         return config
     except FileNotFoundError:
         logging.error(f"Configuration file not found: {config_path}")
         sys.exit(1)
-    except tomli.TOMLDecodeError:
-        logging.error(f"Error parsing TOML configuration: {config_path}")
+    except Exception as e:
+        logging.error(f"Error parsing TOML configuration: {config_path} - {str(e)}")
         sys.exit(1)
 
 

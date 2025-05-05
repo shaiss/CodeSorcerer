@@ -13,11 +13,11 @@ import re
 import sys
 from typing import Dict, Any, List, Type, Optional, Tuple, Set, cast
 
-# tomli is included in Python 3.11+, but we need to ensure compatibility
+# Python 3.11+ includes tomllib in the standard library
 try:
-    import tomli
+    import tomllib  # Python 3.11+
 except ImportError:
-    import tomllib as tomli
+    import tomli as tomllib  # Before Python 3.11
 
 from audit_near.categories.base_category import BaseCategory
 from audit_near.plugins.registry import registry

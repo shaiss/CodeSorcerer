@@ -825,15 +825,24 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
         if not api_key:
             progress.set_error('OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.')
             return
-            
-        # Make sure plugins are loaded before starting
+        
+        # Import required modules for plugin loading
+        import tomli
         from audit_near.plugins.loader import loader
         from audit_near.plugins.management import init_plugins_directory
+        from audit_near.plugins.registry import registry
         
         # Initialize the plugins directory and load all plugins
-        init_plugins_directory()
+        plugins_dir = init_plugins_directory()
         loaded_plugins = loader.load_plugins()
         logger.info(f"Loaded {len(loaded_plugins)} plugins before audit: {', '.join(loaded_plugins)}")
+        
+        # Log registry state
+        all_categories = registry.get_all_category_ids()
+        logger.info(f"Available categories in registry: {', '.join(all_categories)}")
+        
+        # Check if UX Design and Blockchain Integration are in the configuration
+        logger.info(f"Selected categories for audit: {', '.join(config['categories'].keys())}")
         
         # Update progress - Repo validation (10%)
         progress.update_step_progress(
