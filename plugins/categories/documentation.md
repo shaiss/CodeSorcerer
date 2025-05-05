@@ -21,12 +21,11 @@ Please analyze the documentation of the following NEAR-based hackathon project. 
 
 ## Scoring Guidelines
 
-- **10-12**: Exceptional documentation with comprehensive coverage, clear explanations, helpful examples, and excellent code comments.
-- **8-9**: Excellent documentation with comprehensive coverage, clear explanations, and helpful examples.
-- **6-7**: Good documentation with minor gaps or clarity issues.
-- **4-5**: Average documentation with several areas for improvement.
-- **1-3**: Below average documentation with significant gaps that make usage difficult.
-- **0**: Poor or missing documentation that severely limits usability.
+- **9-10**: Excellent documentation with comprehensive coverage, clear explanations, and helpful examples.
+- **7-8**: Good documentation with minor gaps or clarity issues.
+- **5-6**: Average documentation with several areas for improvement.
+- **3-4**: Below average documentation with significant gaps that make usage difficult.
+- **0-2**: Poor or missing documentation that severely limits usability.
 
 ## Response Format
 
@@ -34,7 +33,6 @@ Please provide your analysis as a JSON object with the following structure:
 
 ```json
 {
-  "score": 0-12,
+  "score": 0-10,
   "feedback": "Detailed feedback on documentation quality with specific examples and suggestions..."
 }
-```

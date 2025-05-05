@@ -10,7 +10,7 @@ requires = []
 
 [config]
 max_points = 10
-prompt_file = "md_prompts/code_maintainability.md"
+prompt_file = "code_maintainability.md"
 enhanced = true
 
 [patterns]

@@ -10,7 +10,7 @@ requires = []
 
 [config]
 max_points = 10
-prompt_file = "md_prompts/developer_experience.md"
+prompt_file = "developer_experience.md"
 enhanced = false
 
 [patterns]

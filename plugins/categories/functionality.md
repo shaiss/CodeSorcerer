@@ -20,12 +20,11 @@ Please analyze the functionality of the following NEAR-based hackathon project. 
 
 ## Scoring Guidelines
 
-- **13-15**: Exceptional functionality. Complete feature set with robust implementation, excellent error handling, and thorough edge case coverage.
-- **10-12**: Excellent functionality. Nearly complete feature set with very good implementation and edge case handling.
-- **7-9**: Good functionality with minor missing features or implementation issues.
-- **4-6**: Average functionality with several missing features or implementation issues.
-- **1-3**: Below average functionality with significant missing features or implementation problems.
-- **0**: No functional implementation or completely broken core functionality.
+- **9-10**: Excellent functionality. Complete feature set with robust implementation and edge case handling.
+- **7-8**: Good functionality with minor missing features or implementation issues.
+- **5-6**: Average functionality with several missing features or implementation issues.
+- **3-4**: Below average functionality with significant missing features or implementation problems.
+- **0-2**: Poor functionality with major missing features or broken core functionality.
 
 ## Response Format
 
@@ -33,7 +32,6 @@ Please provide your analysis as a JSON object with the following structure:
 
 ```json
 {
-  "score": 0-15,
+  "score": 0-10,
   "feedback": "Detailed feedback with specific examples and suggestions for improvement..."
 }
-```

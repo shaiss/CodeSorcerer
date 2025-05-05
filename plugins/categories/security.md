@@ -17,12 +17,11 @@ Please analyze the security aspects of the following NEAR-based hackathon projec
 
 ## Scoring Guidelines
 
-- **13-15**: Exceptional security practices with robust protections, consideration of multiple attack vectors, and proactive security measures.
-- **10-12**: Excellent security with thorough consideration of risks and strong protection mechanisms.
-- **7-9**: Good security practices with minor issues that could be improved.
-- **4-6**: Average security with several vulnerabilities that should be addressed.
-- **1-3**: Below average security with significant vulnerabilities that pose real risks.
-- **0**: Critical security flaws that could lead to substantial asset loss or data compromise.
+- **9-10**: Excellent security practices with robust protections and consideration of multiple attack vectors.
+- **7-8**: Good security practices with minor issues that could be improved.
+- **5-6**: Average security with several vulnerabilities that should be addressed.
+- **3-4**: Below average security with significant vulnerabilities that pose real risks.
+- **0-2**: Poor security with critical vulnerabilities that could lead to substantial losses.
 
 ## Response Format
 
@@ -30,7 +29,6 @@ Please provide your analysis as a JSON object with the following structure:
 
 ```json
 {
-  "score": 0-15,
+  "score": 0-10,
   "feedback": "Detailed feedback identifying potential vulnerabilities and suggesting improvements..."
 }
-```

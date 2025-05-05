@@ -10,7 +10,7 @@ requires = []
 
 [config]
 max_points = 20
-prompt_file = "md_prompts/code_quality.md"
+prompt_file = "code_quality.md"
 enhanced = true
 
 [patterns]

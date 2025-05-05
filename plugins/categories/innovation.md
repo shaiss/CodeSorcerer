@@ -20,12 +20,11 @@ Please analyze the innovation aspects of the following NEAR-based hackathon proj
 
 ## Scoring Guidelines
 
-- **13-15**: Breakthrough innovation with original concept, novel technical approach, and revolutionary blockchain utilization that could transform its market segment.
-- **10-12**: Highly innovative project with novel concept, technical approach, and excellent blockchain utilization.
-- **7-9**: Innovative project with original aspects and good blockchain utilization.
-- **4-6**: Moderately innovative project with some original elements.
-- **1-3**: Limited innovation, mostly implementing established ideas with minor original additions.
-- **0**: Minimal innovation, primarily replicating existing solutions with no original contributions.
+- **9-10**: Highly innovative project with novel concept, technical approach, and excellent blockchain utilization.
+- **7-8**: Innovative project with original aspects and good blockchain utilization.
+- **5-6**: Moderately innovative project with some original elements.
+- **3-4**: Limited innovation, mostly implementing established ideas with minor original additions.
+- **0-2**: Minimal innovation, primarily replicating existing solutions.
 
 ## Response Format
 
@@ -33,7 +32,6 @@ Please provide your analysis as a JSON object with the following structure:
 
 ```json
 {
-  "score": 0-15,
+  "score": 0-10,
   "feedback": "Detailed feedback on innovation aspects with specific examples and suggestions..."
 }
-```

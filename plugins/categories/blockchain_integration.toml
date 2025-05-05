@@ -10,7 +10,7 @@ requires = []
 
 [config]
 max_points = 20
-prompt_file = "md_prompts/blockchain_integration.md"
+prompt_file = "blockchain_integration.md"
 enhanced = true
 
 [patterns]

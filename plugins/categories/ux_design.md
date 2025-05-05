@@ -21,12 +21,11 @@ Please analyze the user experience (UX) design of the following NEAR-based hacka
 
 ## Scoring Guidelines
 
-- **13-15**: Exceptional UX design with highly intuitive interfaces, comprehensive accessibility features, and seamlessly integrated blockchain interactions that feel natural to users.
-- **10-12**: Excellent UX design with intuitive interfaces, good accessibility, and smooth blockchain interactions.
-- **7-9**: Good UX design with minor usability issues.
-- **4-6**: Average UX design with several usability issues that impact the experience.
-- **1-3**: Below average UX design with significant usability problems.
-- **0**: Poor UX design with major usability issues that make the application unusable.
+- **9-10**: Excellent UX design with intuitive interfaces, accessibility, and smooth blockchain interactions.
+- **7-8**: Good UX design with minor usability issues.
+- **5-6**: Average UX design with several usability issues that impact the experience.
+- **3-4**: Below average UX design with significant usability problems.
+- **0-2**: Poor UX design with major usability issues that make the application difficult to use.
 
 ## Response Format
 
@@ -34,7 +33,6 @@ Please provide your analysis as a JSON object with the following structure:
 
 ```json
 {
-  "score": 0-15,
+  "score": 0-10,
   "feedback": "Detailed feedback on UX design with specific examples and suggestions..."
 }
-```
