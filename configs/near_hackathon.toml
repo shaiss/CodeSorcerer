@@ -1,9 +1,9 @@
-# NEAR Hackathon Audit Configuration
+# Code Sorcerer Configuration
 
 [general]
-name = "NEAR Hackathon Auditor"
+name = "Code Sorcerer"
 version = "0.1.0"
-description = "Audit tool for NEAR hackathon projects"
+description = "Comprehensive code audit and analysis tool"
 
 [categories.code_quality]
 name = "Code Quality"
