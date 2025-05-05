@@ -632,12 +632,27 @@ def check_audit_progress():
 
 @app.route('/api/audit-progress')
 def api_audit_progress():
-    """API endpoint to check the current audit progress."""
+    """
+    API endpoint to check the current audit progress.
+    
+    ### IMPORTANT WARNING - RACE CONDITION HANDLING ###
+    This endpoint is designed to handle a critical race condition between
+    the initialization of an audit and the first AJAX call from the frontend.
+    
+    DO NOT modify the behavior where this returns a 200 status with initialization data
+    instead of an error when the audit progress isn't found. This approach prevents
+    the "No audit in progress" error that occurs when the frontend JS makes its first
+    AJAX call before the audit job is fully registered in the server's memory.
+    
+    Any changes to this endpoint should be thoroughly tested with new audits
+    to ensure the race condition isn't reintroduced.
+    """
     # Get progress ID from session
     progress_id = session.get('audit_progress_id')
     
     if not progress_id or progress_id not in audit_progress_store:
         # Instead of returning an error, return a status indicating initialization
+        # This is critical for handling the race condition with the frontend
         return jsonify({
             "status": "initializing",
             "message": "Audit is initializing, please wait...",
@@ -653,7 +668,7 @@ def api_audit_progress():
             "categories_pending": [],
             "report_id": None,
             "error": None
-        }), 200  # Return 200 OK, not 404
+        }), 200  # Return 200 OK, not 404 - this is intentional
     
     # Get progress data
     progress = audit_progress_store[progress_id]

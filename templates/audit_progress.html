@@ -229,66 +229,39 @@
 
 {% block scripts %}
 <script>
+    // =====================================================================================
+    // IMPORTANT WARNING: DO NOT MODIFY THE AJAX INITIALIZATION AND POLLING WITHOUT TESTING
+    // =====================================================================================
+    // This code handles a critical race condition between the backend initialization and 
+    // frontend AJAX polling. Modifications can easily break the "No audit in progress" bug.
+    // =====================================================================================
+    
     document.addEventListener('DOMContentLoaded', function() {
-        try {
-            // Safely get elements and assign IDs if needed
-            const safeGetElement = (selector, idToAssign) => {
-                const element = document.querySelector(selector);
-                if (element && idToAssign) {
-                    element.id = idToAssign;
-                }
-                return element;
-            };
-            
-            // Initialize common elements
-            safeGetElement('.badge.bg-primary', 'overall-percentage');
-            safeGetElement('.progress-bar', 'progress-bar');
-            
-            // Current task text
-            const currentTaskParent = document.querySelector('.current-task');
-            if (currentTaskParent) {
-                const currentTaskSpan = currentTaskParent.querySelector('span');
-                if (currentTaskSpan) {
-                    currentTaskSpan.id = 'current-task-text';
-                }
+        // Add ID attributes to elements we'll be updating
+        document.querySelector('.badge.bg-primary').id = 'overall-percentage';
+        document.querySelector('.progress-bar').id = 'progress-bar';
+        document.querySelector('.current-task span').id = 'current-task-text';
+        
+        const steps = ['repo_validation', 'file_gathering', 'code_analysis', 'report_generation'];
+        steps.forEach(step => {
+            // Add IDs to step elements
+            const stepElement = document.querySelector(`.step:nth-child(${steps.indexOf(step) + 2})`);
+            if (stepElement) {
+                stepElement.id = `step-${step}`;
+                stepElement.querySelector('.badge').id = `badge-${step}`;
+                stepElement.querySelector('.step-icon').id = `icon-${step}`;
             }
-            
-            // Initialize step elements if they exist
-            const steps = ['repo_validation', 'file_gathering', 'code_analysis', 'report_generation'];
-            const stepElements = document.querySelectorAll('.step');
-            
-            if (stepElements.length > 0) {
-                steps.forEach((step, index) => {
-                    if (index + 1 < stepElements.length) {
-                        const stepElement = stepElements[index + 1]; // +1 because of progress bar before first step
-                        if (stepElement) {
-                            stepElement.id = `step-${step}`;
-                            
-                            const badge = stepElement.querySelector('.badge');
-                            if (badge) badge.id = `badge-${step}`;
-                            
-                            const icon = stepElement.querySelector('.step-icon');
-                            if (icon) icon.id = `icon-${step}`;
-                        }
-                    }
-                });
-            }
-            
-            // Make sure category containers have proper IDs
-            const categoryLists = document.querySelectorAll('.category-list .row .col-md-6');
-            if (categoryLists.length >= 2) {
-                // Completed categories
-                const completedList = categoryLists[0].querySelector('ul');
-                if (completedList) completedList.id = 'completed-categories';
-                
-                // Pending categories
-                const pendingList = categoryLists[1].querySelector('ul');
-                if (pendingList) pendingList.id = 'pending-categories';
-            }
-            
-            console.log('DOM elements initialized successfully');
-        } catch (error) {
-            console.error('Error initializing DOM elements:', error);
+        });
+        
+        // Get containers for categories
+        const completedContainer = document.querySelector('.category-list .row .col-md-6:nth-child(1) ul');
+        if (completedContainer) {
+            completedContainer.id = 'completed-categories';
+        }
+        
+        const pendingContainer = document.querySelector('.category-list .row .col-md-6:nth-child(2) ul');
+        if (pendingContainer) {
+            pendingContainer.id = 'pending-categories';
         }
         
         // Start polling for updates
