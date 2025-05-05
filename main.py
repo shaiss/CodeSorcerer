@@ -110,11 +110,16 @@ def audit():
     for category_id in registry.get_all_category_ids():
         metadata = registry.get_metadata(category_id)
         if metadata:
+            # Check for max_points in config section (where it's stored in TOML files)
+            config = metadata.get("config", {})
+            max_points = config.get("max_points", 10)
+            logger.info(f"Category {category_id} max points: {max_points}")
+            
             available_categories.append({
                 "id": category_id,
                 "name": metadata.get("name", category_id),
                 "description": metadata.get("description", ""),
-                "max_points": metadata.get("max_points", 10)
+                "max_points": max_points
             })
     
     # Get available bundles

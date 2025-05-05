@@ -112,28 +112,10 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
     Returns:
         Dictionary mapping category names to handler instances
     """
-    base_prompts_dir = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "prompts"
-    )
-    
     # Import the registry and plugin loader
     from audit_near.plugins.registry import registry
     from audit_near.plugins.loader import loader
     from audit_near.plugins.management import discover_plugins, init_plugins_directory
-    
-    # Legacy category map for backward compatibility
-    # Note: All categories have been migrated to plugins. This is kept for backward
-    # compatibility with older code or configs that might still reference these classes.
-    legacy_category_map = {
-        "code_quality": EnhancedCodeQuality,  # Migrated to plugin
-        "functionality": Functionality,       # Migrated to plugin
-        "security": Security,                 # Migrated to plugin
-        "innovation": Innovation,             # Migrated to plugin
-        "documentation": Documentation,       # Migrated to plugin
-        "ux_design": UXDesign,                # Migrated to plugin
-        "blockchain_integration": EnhancedBlockchainIntegration,  # Migrated to plugin
-    }
     
     # Initialize plugins directory
     init_plugins_directory()
@@ -172,6 +154,11 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
             # Determine if this is an enhanced category
             is_enhanced = metadata.get("enhanced", False)
             
+            # Update max_points from metadata if not explicitly set in config
+            if "max_points" not in category_config and "max_points" in metadata:
+                max_points = metadata.get("max_points", 10)
+                logging.info(f"Using max_points from plugin metadata: {max_points} for {category_name}")
+            
             if is_enhanced:
                 # Use enhanced initialization with branch parameter
                 handlers[category_name] = category_class(
@@ -201,32 +188,8 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
                         max_points=max_points,
                         repo_path=repo_path
                     )
-        
-        # Legacy category handling (backward compatibility)
-        elif category_name in legacy_category_map:
-            logging.warning(f"Using legacy class for category: {category_name} - This category has been migrated to a plugin but is not found in the registry. Please check your plugins directory.")
-            category_class = legacy_category_map[category_name]
-            prompt_file = os.path.join(base_prompts_dir, f"{category_name}.md")
-            
-            # Check if this is an enhanced category that requires a branch parameter
-            if category_class in [EnhancedCodeQuality, EnhancedBlockchainIntegration]:
-                handlers[category_name] = category_class(
-                    ai_client=ai_client,
-                    prompt_file=prompt_file,
-                    max_points=max_points,
-                    repo_path=repo_path,
-                    branch=branch
-                )
-            else:
-                # Use original instantiation for non-enhanced categories
-                handlers[category_name] = category_class(
-                    ai_client=ai_client,
-                    prompt_file=prompt_file,
-                    max_points=max_points,
-                    repo_path=repo_path
-                )
         else:
-            logging.warning(f"Category {category_name} not found in registry or legacy map, skipping")
+            logging.warning(f"Category {category_name} not found in registry, skipping")
     
     return handlers
 
