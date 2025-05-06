@@ -1,0 +1,20 @@
+# UX Design Plugin
+
+[metadata]
+id = "ux_design"
+name = "User Experience & Interface Design"
+version = "1.0.0"
+description = "Evaluates user interface design, usability, accessibility, and overall user experience"
+author = "Shai Perednik"
+requires = []
+
+[config]
+max_points = 15
+prompt_file = "ux_design.md"
+enhanced = false
+
+[patterns]
+# Focus on frontend code, UI components, styles, and templates
+include = ["\\.html$", "\\.css$", "\\.scss$", "\\.jsx?$", "\\.tsx?$", "components/", "pages/", "views/", "styles/", "templates/", "theme", "ui/", "interface/", "design"]
+# Exclude test files, build artifacts, and dependencies
+exclude = ["node_modules", "dist", "build", "target", "test", "spec", "\\.min\\.js$", "\\.bundle\\.js$"]

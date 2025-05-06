@@ -1,0 +1,20 @@
+# Innovation Plugin
+
+[metadata]
+id = "innovation"
+name = "Innovation & Creativity"
+version = "1.0.0"
+description = "Evaluates project novelty, technical innovation, market potential, and creative use of blockchain technology"
+author = "Shai Perednik"
+requires = []
+
+[config]
+max_points = 15
+prompt_file = "innovation.md"
+enhanced = false
+
+[patterns]
+# Focus on core implementation files and novel/unique approaches
+include = ["\\.js$", "\\.jsx$", "\\.ts$", "\\.tsx$", "\\.py$", "\\.rs$", "\\.sol$", "\\.go$", "README\\.md$", "contract", "core", "model", "index", "app", "main", "lib"]
+# Exclude test files, build artifacts, and dependencies
+exclude = ["node_modules", "dist", "build", "target", "venv", "__pycache__", "test", "spec", "mock", "\\.min\\.js$", "\\.bundle\\.js$"]

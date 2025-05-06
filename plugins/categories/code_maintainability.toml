@@ -1,0 +1,20 @@
+# Code Maintainability Plugin
+
+[metadata]
+id = "code_maintainability"
+name = "Code Maintainability"
+version = "1.0.0"
+description = "Evaluates code structure, organization, and long-term maintainability factors"
+author = "Shai Perednik"
+requires = []
+
+[config]
+max_points = 10
+prompt_file = "code_maintainability.md"
+enhanced = true
+
+[patterns]
+# Include source code files from common languages
+include = ["\\.py$", "\\.js$", "\\.jsx$", "\\.ts$", "\\.tsx$", "\\.rs$", "\\.sol$", "\\.c$", "\\.cpp$", "\\.h$", "\\.hpp$", "\\.java$", "\\.go$"]
+# Exclude test files, build artifacts, and dependencies
+exclude = ["test", "node_modules", "dist", "build", "target", "venv", "__pycache__"]

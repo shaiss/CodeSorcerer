@@ -1,0 +1,20 @@
+# Hackathon Project Evaluation Bundle
+
+[metadata]
+id = "hackathon_bundle"
+name = "Hackathon Project Evaluation"
+version = "1.0.0"
+description = "A bundle of categories optimized for evaluating hackathon projects"
+author = "Shai Perednik"
+
+[categories]
+# Standard categories
+code_quality = true
+functionality = true
+security = true
+documentation = true
+innovation = true
+
+# Plugin categories
+code_maintainability = true
+developer_experience = true

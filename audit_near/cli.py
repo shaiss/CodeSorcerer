@@ -11,19 +11,12 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import tomli
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    import tomli as tomllib  # Before Python 3.11
 
 from audit_near.ai_client import AiClient
-from audit_near.categories.blockchain_integration import BlockchainIntegration
-from audit_near.categories.code_quality import CodeQuality
-from audit_near.categories.documentation import Documentation
-from audit_near.categories.functionality import Functionality
-from audit_near.categories.innovation import Innovation
-from audit_near.categories.security import Security
-from audit_near.categories.ux_design import UXDesign
-# Import enhanced category processors
-from audit_near.categories.enhanced_blockchain_integration import EnhancedBlockchainIntegration
-from audit_near.categories.enhanced_code_quality import EnhancedCodeQuality
 from audit_near.providers.repo_provider import RepoProvider
 from audit_near.providers.repo_analyzer import RepoAnalyzer
 from audit_near.reporters.markdown_reporter import MarkdownReporter
@@ -96,13 +89,13 @@ def load_config(config_path: Optional[str]) -> Dict:
     
     try:
         with open(config_path, "rb") as f:
-            config = tomli.load(f)
+            config = tomllib.load(f)
         return config
     except FileNotFoundError:
         logging.error(f"Configuration file not found: {config_path}")
         sys.exit(1)
-    except tomli.TOMLDecodeError:
-        logging.error(f"Error parsing TOML configuration: {config_path}")
+    except Exception as e:
+        logging.error(f"Error parsing TOML configuration: {config_path} - {str(e)}")
         sys.exit(1)
 
 
@@ -119,44 +112,84 @@ def get_category_handlers(config: Dict, ai_client: AiClient, repo_path: str, bra
     Returns:
         Dictionary mapping category names to handler instances
     """
-    base_prompts_dir = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "prompts"
-    )
+    # Import the registry and plugin loader
+    from audit_near.plugins.registry import registry
+    from audit_near.plugins.loader import loader
+    from audit_near.plugins.management import discover_plugins, init_plugins_directory
     
-    # Define category map with enhanced processors where available
-    category_map = {
-        "code_quality": EnhancedCodeQuality,  # Use the enhanced version
-        "functionality": Functionality,
-        "security": Security,
-        "innovation": Innovation,
-        "documentation": Documentation,
-        "ux_design": UXDesign,
-        "blockchain_integration": EnhancedBlockchainIntegration,  # Use the enhanced version
-    }
+    # Initialize plugins directory
+    init_plugins_directory()
+    
+    # Discover and load plugins
+    loaded_plugins = discover_plugins()
+    logging.info(f"Loaded {len(loaded_plugins)} plugins: {', '.join(loaded_plugins)}")
     
     handlers = {}
-    for category_name, category_class in category_map.items():
-        if category_name in config["categories"]:
-            category_config = config["categories"][category_name]
-            prompt_file = os.path.join(base_prompts_dir, f"{category_name}.md")
-            # Check if this is an enhanced category that requires a branch parameter
-            if category_class in [EnhancedCodeQuality, EnhancedBlockchainIntegration]:
+    
+    # Process categories from configuration
+    for category_name in config["categories"]:
+        category_config = config["categories"][category_name]
+        max_points = category_config.get("max_points", 10)
+        
+        # Check if this category is available in the registry (plugin system)
+        if registry.get_category(category_name):
+            logging.info(f"Using plugin for category: {category_name}")
+            category_class = registry.get_category(category_name)
+            metadata = registry.get_metadata(category_name)
+            
+            # Get the plugin directory for this category
+            plugin_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "plugins", "categories"
+            )
+            
+            # Get prompt file from metadata or use default
+            if "prompt_file" in category_config:
+                # Use prompt file from config
+                prompt_file = os.path.join(plugin_dir, category_config["prompt_file"])
+            else:
+                # Use default prompt file name
+                prompt_file = os.path.join(plugin_dir, f"{category_name}.md")
+            
+            # Determine if this is an enhanced category
+            is_enhanced = metadata.get("enhanced", False)
+            
+            # Update max_points from metadata if not explicitly set in config
+            if "max_points" not in category_config and "max_points" in metadata:
+                max_points = metadata.get("max_points", 10)
+                logging.info(f"Using max_points from plugin metadata: {max_points} for {category_name}")
+            
+            if is_enhanced:
+                # Use enhanced initialization with branch parameter
                 handlers[category_name] = category_class(
                     ai_client=ai_client,
                     prompt_file=prompt_file,
-                    max_points=category_config.get("max_points", 10),
+                    max_points=max_points,
                     repo_path=repo_path,
+                    category_name=metadata.get("name", category_name),
                     branch=branch
                 )
             else:
-                # Use original instantiation for non-enhanced categories
-                handlers[category_name] = category_class(
-                    ai_client=ai_client,
-                    prompt_file=prompt_file,
-                    max_points=category_config.get("max_points", 10),
-                    repo_path=repo_path
-                )
+                # Use standard initialization
+                try:
+                    # Try to initialize with category_name (new style)
+                    handlers[category_name] = category_class(
+                        ai_client=ai_client,
+                        prompt_file=prompt_file,
+                        max_points=max_points,
+                        repo_path=repo_path,
+                        category_name=metadata.get("name", category_name)
+                    )
+                except TypeError:
+                    # Fall back to old style without category_name
+                    handlers[category_name] = category_class(
+                        ai_client=ai_client,
+                        prompt_file=prompt_file,
+                        max_points=max_points,
+                        repo_path=repo_path
+                    )
+        else:
+            logging.warning(f"Category {category_name} not found in registry, skipping")
     
     return handlers
 

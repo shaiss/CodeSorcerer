@@ -1,0 +1,20 @@
+# Developer Experience Plugin
+
+[metadata]
+id = "developer_experience"
+name = "Developer Experience"
+version = "1.0.0"
+description = "Evaluates how developer-friendly the codebase is, including tooling, documentation, and onboarding"
+author = "Shai Perednik"
+requires = []
+
+[config]
+max_points = 10
+prompt_file = "developer_experience.md"
+enhanced = false
+
+[patterns]
+# Include source code, configuration files, documentation, and tooling
+include = ["\\.py$", "\\.js$", "\\.jsx$", "\\.ts$", "\\.tsx$", "\\.md$", "\\.json$", "\\.toml$", "\\.yaml$", "\\.yml$", "Makefile$", "Dockerfile$", "\\.sh$", "\\.gitignore$"]
+# Exclude dependencies and build artifacts
+exclude = ["node_modules", "dist", "build", "target", "venv", "__pycache__"]

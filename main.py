@@ -89,6 +89,67 @@ def index():
 @app.route('/audit', methods=['GET', 'POST'])
 def audit():
     """Start a new audit."""
+    # Import the registry and plugin loader
+    from audit_near.plugins.registry import registry
+    from audit_near.plugins.management import init_plugins_directory, discover_plugins
+    from pathlib import Path
+    
+    # Python 3.11+ includes tomllib in the standard library
+    try:
+        import tomllib  # Python 3.11+
+    except ImportError:
+        import tomli as tomllib  # Before Python 3.11
+    
+    # Initialize plugins directory and load plugins
+    init_plugins_directory()
+    available_plugins = discover_plugins()
+    logger.info(f"Loaded {len(available_plugins)} plugins: {', '.join(available_plugins)}")
+    
+    # Get available categories from registry 
+    available_categories = []
+    for category_id in registry.get_all_category_ids():
+        metadata = registry.get_metadata(category_id)
+        if metadata:
+            # Check for max_points in config section (where it's stored in TOML files)
+            config = metadata.get("config", {})
+            max_points = config.get("max_points", 10)
+            logger.info(f"Category {category_id} max points: {max_points}")
+            
+            available_categories.append({
+                "id": category_id,
+                "name": metadata.get("name", category_id),
+                "description": metadata.get("description", ""),
+                "max_points": max_points
+            })
+    
+    # Get available bundles
+    bundles_dir = Path("plugins/bundles")
+    available_bundles = []
+    
+    if bundles_dir.exists():
+        for bundle_file in bundles_dir.glob("*.toml"):
+            try:
+                with open(bundle_file, "rb") as f:
+                    bundle_data = tomllib.load(f)
+                
+                if "metadata" in bundle_data:
+                    # Filter categories to include only those set to true
+                    bundle_categories = bundle_data.get("categories", {})
+                    # Log the categories from the bundle
+                    logger.info(f"Bundle {bundle_file.stem} categories: {bundle_categories}")
+                    
+                    enabled_categories = [key for key, value in bundle_categories.items() if value is True]
+                    logger.info(f"Bundle {bundle_file.stem} enabled categories: {enabled_categories}")
+                    
+                    available_bundles.append({
+                        "id": bundle_file.stem,
+                        "name": bundle_data["metadata"].get("name", bundle_file.stem),
+                        "description": bundle_data["metadata"].get("description", ""),
+                        "categories": enabled_categories
+                    })
+            except Exception as e:
+                logger.error(f"Error loading bundle {bundle_file}: {e}")
+    
     if request.method == 'POST':
         # Handle form submission
         repo_path = request.form.get('repo_path')
@@ -150,10 +211,89 @@ def audit():
         session['repo_path'] = repo_path
         session['branch'] = request.form.get('branch', 'main')
         
+        # Process category selection
+        selected_bundle = request.form.get('bundle')
+        selected_categories = request.form.getlist('categories')
+        
+        # Store audit configuration in session
+        session['audit_config'] = {
+            'categories': {},
+            'bundle': selected_bundle
+        }
+        
+        # If a bundle was selected, use its categories
+        if selected_bundle:
+            bundle_path = bundles_dir / f"{selected_bundle}.toml"
+            if bundle_path.exists():
+                try:
+                    with open(bundle_path, "rb") as f:
+                        bundle_data = tomllib.load(f)
+                    
+                    # Add all enabled categories from the bundle
+                    if "categories" in bundle_data:
+                        for category_id, enabled in bundle_data["categories"].items():
+                            if enabled:
+                                metadata = registry.get_metadata(category_id)
+                                max_points = 10
+                                if metadata:
+                                    # Get max_points from config section
+                                    config = metadata.get("config", {})
+                                    max_points = config.get("max_points", 10)
+                                    logger.info(f"Bundle category {category_id} max points: {max_points}")
+                                else:
+                                    # Default points for standard categories
+                                    if category_id == "code_quality":
+                                        max_points = 20
+                                    elif category_id in ["functionality", "security", "documentation"]:
+                                        max_points = 15
+                                    else:
+                                        max_points = 10
+                                        
+                                session['audit_config']['categories'][category_id] = {
+                                    'max_points': max_points
+                                }
+                except Exception as e:
+                    logger.error(f"Error loading bundle {bundle_path}: {e}")
+        else:
+            # Use individually selected categories
+            for category_id in selected_categories:
+                metadata = registry.get_metadata(category_id)
+                max_points = 10
+                if metadata:
+                    # Get max_points from config section
+                    config = metadata.get("config", {})
+                    max_points = config.get("max_points", 10)
+                    logger.info(f"Selected category {category_id} max points: {max_points}")
+                else:
+                    # Default points for standard categories
+                    if category_id == "code_quality":
+                        max_points = 20
+                    elif category_id in ["functionality", "security", "documentation"]:
+                        max_points = 15
+                    else:
+                        max_points = 10
+                        
+                session['audit_config']['categories'][category_id] = {
+                    'max_points': max_points
+                }
+        
+        # If no categories were selected or found in bundle, use defaults
+        if not session['audit_config']['categories']:
+            session['audit_config']['categories'] = {
+                "code_quality": {"max_points": 20},
+                "functionality": {"max_points": 15},
+                "security": {"max_points": 20},
+                "documentation": {"max_points": 15},
+                "innovation": {"max_points": 10},
+                "ux_design": {"max_points": 10},
+                "blockchain_integration": {"max_points": 10}
+            }
+            
         # Add debug info to session
         repo_stats = get_repository_stats(repo_path)
         session['repo_stats'] = repo_stats
         logger.info(f"Repository validated: {repo_path} with {repo_stats['total_files']} files")
+        logger.info(f"Selected categories: {list(session['audit_config']['categories'].keys())}")
         
         return redirect(url_for('run_audit'))
     
@@ -164,7 +304,15 @@ def audit():
         sample_repos = [os.path.join(test_repos_dir, d) for d in os.listdir(test_repos_dir) 
                       if os.path.isdir(os.path.join(test_repos_dir, d))]
     
-    return render_template('audit_form.html', sample_repos=sample_repos)
+    # Log the bundles that will be rendered in the template
+    for bundle in available_bundles:
+        logger.info(f"Rendering bundle: {bundle['id']} with categories: {bundle['categories']}")
+    
+    return render_template('audit_form.html', 
+                          sample_repos=sample_repos,
+                          available_categories=available_categories,
+                          available_bundles=available_bundles,
+                          plugin_count=len(available_plugins))
 
 
 def validate_repository_path(repo_path):
@@ -288,6 +436,8 @@ def validate_repository_endpoint():
     """API endpoint to validate a repository path."""
     repo_path = request.args.get('path')
     is_github_param = request.args.get('is_github', 'false').lower() == 'true'
+    # Added timeout to prevent worker process hanging
+    timeout_seconds = 30
     
     if not repo_path:
         return jsonify({
@@ -706,6 +856,28 @@ def run_audit_in_background(progress_id, repo_path, branch, config):
             progress.set_error('OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.')
             return
         
+        # Import required modules for plugin loading
+        try:
+            import tomllib  # Python 3.11+
+        except ImportError:
+            import tomli as tomllib  # Before Python 3.11
+            
+        from audit_near.plugins.loader import loader
+        from audit_near.plugins.management import init_plugins_directory
+        from audit_near.plugins.registry import registry
+        
+        # Initialize the plugins directory and load all plugins
+        plugins_dir = init_plugins_directory()
+        loaded_plugins = loader.load_plugins()
+        logger.info(f"Loaded {len(loaded_plugins)} plugins before audit: {', '.join(loaded_plugins)}")
+        
+        # Log registry state
+        all_categories = registry.get_all_category_ids()
+        logger.info(f"Available categories in registry: {', '.join(all_categories)}")
+        
+        # Check if UX Design and Blockchain Integration are in the configuration
+        logger.info(f"Selected categories for audit: {', '.join(config['categories'].keys())}")
+        
         # Update progress - Repo validation (10%)
         progress.update_step_progress(
             AuditStep.REPO_VALIDATION, 25, 
@@ -972,9 +1144,17 @@ def run_audit():
         return redirect(url_for('audit'))
     
     try:
-        # Load default config
-        config_path = os.path.join(os.path.dirname(__file__), 'configs', 'near_hackathon.toml')
-        config = load_config(config_path)
+        # Use the configuration from the audit form (if available)
+        if 'audit_config' in session and session['audit_config'].get('categories'):
+            config = {
+                "categories": session['audit_config']['categories']
+            }
+            logger.info(f"Using custom configuration with categories: {list(config['categories'].keys())}")
+        else:
+            # Fall back to default config file if no custom config is available
+            config_path = os.path.join(os.path.dirname(__file__), 'configs', 'near_hackathon.toml')
+            config = load_config(config_path)
+            logger.info("Using default configuration from near_hackathon.toml")
         
         # Create a progress tracker
         progress_id = str(uuid.uuid4())

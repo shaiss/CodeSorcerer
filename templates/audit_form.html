@@ -108,6 +108,81 @@
                         </div>
                     </div>
                     
+                    <!-- Category and Bundle Selection -->
+                    <div class="mb-3 mt-4">
+                        <h4>Audit Configuration</h4>
+                        
+                        {% if available_bundles %}
+                        <div class="mb-3">
+                            <label for="bundle" class="form-label">Select a Bundle</label>
+                            <select class="form-select" id="bundle" name="bundle">
+                                <option value="">-- Custom Configuration --</option>
+                                {% for bundle in available_bundles %}
+                                <option value="{{ bundle.id }}" data-categories='{{ bundle.categories|tojson }}'>{{ bundle.name }} - {{ bundle.description }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Bundles are predefined sets of categories optimized for specific use cases</div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3" id="categorySelection">
+                            <label class="form-label">Select Categories to Audit</label>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-light">Assessment Categories</div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <!-- Assessment Categories -->
+                                                {% if available_categories %}
+                                                <div class="col-md-6">
+                                                    {% for category in available_categories %}
+                                                    {% if loop.index <= (available_categories|length / 2)|round(0, 'ceil') %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="categories" value="{{ category.id }}" id="cat_{{ category.id }}" 
+                                                        {% if category.id in ['code_quality', 'functionality', 'security', 'documentation', 'innovation', 'ux_design', 'blockchain_integration'] %}checked{% endif %}>
+                                                        <label class="form-check-label" for="cat_{{ category.id }}">
+                                                            {{ category.name }} ({{ category.max_points }} pts)
+                                                            {% if category.description %}
+                                                            <i class="bi bi-info-circle" title="{{ category.description }}"></i>
+                                                            {% endif %}
+                                                        </label>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    {% for category in available_categories %}
+                                                    {% if loop.index > (available_categories|length / 2)|round(0, 'ceil') %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="categories" value="{{ category.id }}" id="cat_{{ category.id }}">
+                                                        <label class="form-check-label" for="cat_{{ category.id }}">
+                                                            {{ category.name }} ({{ category.max_points }} pts)
+                                                            {% if category.description %}
+                                                            <i class="bi bi-info-circle" title="{{ category.description }}"></i>
+                                                            {% endif %}
+                                                        </label>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                    
+                                                    <div class="text-center mt-3">
+                                                        <span class="badge bg-primary">{{ available_categories|length }} Assessment Categories Available</span>
+                                                    </div>
+                                                </div>
+                                                {% else %}
+                                                <div class="col-12 text-center">
+                                                    <p>No assessment categories available. Please check your plugin configuration.</p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="form-text mb-3">
                         <div class="alert alert-info">
                             <strong>Important:</strong> The audit process may take several minutes depending on the repository size.
@@ -241,6 +316,66 @@
         }
     }
     
+    // Handle bundle selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const bundleSelect = document.getElementById('bundle');
+        if (bundleSelect) {
+            bundleSelect.addEventListener('change', updateCategorySelectionFromBundle);
+        }
+    });
+    
+    // Update category checkboxes based on selected bundle
+    function updateCategorySelectionFromBundle() {
+        console.log("Bundle selection changed");
+        const bundleSelect = document.getElementById('bundle');
+        const selectedBundle = bundleSelect.value;
+        console.log("Selected bundle:", selectedBundle);
+        
+        if (!selectedBundle) {
+            // No bundle selected, don't modify category selections
+            document.getElementById('categorySelection').style.display = 'block';
+            return;
+        }
+        
+        // Clear all category selections first
+        document.querySelectorAll('input[name="categories"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Get the bundle data
+        const bundleOptions = bundleSelect.options;
+        const selectedOption = bundleOptions[bundleSelect.selectedIndex];
+        const categoriesStr = selectedOption.getAttribute('data-categories');
+        console.log("Categories string:", categoriesStr);
+        
+        if (categoriesStr) {
+            try {
+                console.log("Attempting to parse JSON:", categoriesStr);
+                const categories = JSON.parse(categoriesStr);
+                console.log("Parsed categories:", categories);
+                
+                // Check the checkboxes for categories in the bundle
+                categories.forEach(category => {
+                    console.log("Setting category:", category);
+                    const checkbox = document.getElementById(`cat_${category}`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        console.log("Checkbox found and checked for:", category);
+                    } else {
+                        console.warn("Checkbox not found for:", category);
+                    }
+                });
+                
+                // Keep the category selection visible even when a bundle is selected
+                // This allows users to see which categories are in the bundle and add additional ones
+            } catch (e) {
+                console.error('Error parsing bundle categories:', e);
+            }
+        } else {
+            console.warn("No categories string found in the selected option");
+        }
+    }
+    
     // Auto-detect repository type based on input
     function detectRepoType() {
         const repoPath = document.getElementById('repo_path').value.trim();
@@ -307,12 +442,20 @@
             <p class="mt-2">${validatingMsg}</p>
         `;
         
+        // Set a timeout for large repositories
+        const timeoutSeconds = 60; // 1 minute timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutSeconds * 1000);
+        
         // Make an AJAX call to validate the repository
         fetch('/validate-repository?path=' + encodeURIComponent(repoPath) + 
              '&is_github=' + isGithubUrl + 
-             '&branch=' + encodeURIComponent(branch))
+             '&branch=' + encodeURIComponent(branch), {
+                signal: controller.signal
+             })
             .then(response => response.json())
             .then(data => {
+                clearTimeout(timeoutId); // Clear the timeout
                 document.getElementById('validationSpinner').style.display = 'none';
                 document.getElementById('validationContent').style.display = 'block';
                 

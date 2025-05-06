@@ -95,7 +95,12 @@ def get_repository_branches(repo_path):
             # Method 1: Using GitPython API
             for remote in repo.remotes:
                 # Fetch to ensure we have remote branch info
-                remote.fetch()
+                try:
+                    # Add timeout to prevent worker hangs
+                    remote.fetch(timeout=10)
+                except Exception as fetch_error:
+                    logger.warning(f"Timeout or error during remote fetch: {fetch_error}")
+                    # Continue without fetch results
                 for ref in remote.refs:
                     # Skip HEAD reference
                     if ref.name.endswith('/HEAD'):
@@ -117,7 +122,8 @@ def get_repository_branches(repo_path):
                         cwd=repo_path, 
                         capture_output=True, 
                         text=True, 
-                        check=True
+                        check=True, 
+                        timeout=5  # Add timeout to prevent hanging
                     )
                     
                     if result.stdout:
@@ -162,15 +168,28 @@ def get_repository_branches(repo_path):
             try:
                 if ref:
                     # If we have a reference object, use it to get commit info
-                    commit = next(repo.iter_commits(ref.name, max_count=1))
-                    branches.append({
-                        'name': branch_name,
-                        'commit_hash': commit.hexsha,
-                        'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
-                        'commit_message': commit.message.strip().split('\n')[0],
-                        'is_default': branch_name == default_branch,
-                        'is_remote': True
-                    })
+                    try:
+                        # Use max_count to limit commits and prevent timeouts
+                        commit = next(repo.iter_commits(ref.name, max_count=1))
+                        branches.append({
+                            'name': branch_name,
+                            'commit_hash': commit.hexsha,
+                            'commit_date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                            'commit_message': commit.message.strip().split('\n')[0],
+                            'is_default': branch_name == default_branch,
+                            'is_remote': True
+                        })
+                    except Exception as e:
+                        logger.warning(f"Error getting commit info for branch {branch_name}: {e}")
+                        # Add minimal branch info without commit details
+                        branches.append({
+                            'name': branch_name,
+                            'commit_hash': 'unknown',
+                            'commit_date': 'unknown',
+                            'commit_message': '',
+                            'is_default': branch_name == default_branch,
+                            'is_remote': True
+                        })
                 else:
                     # For branches discovered via git command without ref objects
                     # Create a simpler branch entry with just the name
@@ -283,19 +302,29 @@ def download_github_repo(url, branch='main', fetch_all_branches=True):
             try:
                 import subprocess
                 logger.info("Fetching additional branch information...")
+                # Add a timeout to prevent worker timeouts
+                timeout = 10  # 10 seconds should be enough for small-medium repos
+                
                 subprocess.run(
                     ['git', 'remote', 'set-branches', 'origin', '*'],  # Configure git to fetch all remote branches
                     cwd=temp_dir, 
                     check=True,
-                    capture_output=True
+                    capture_output=True,
+                    timeout=timeout
                 )
                 
-                subprocess.run(
-                    ['git', 'fetch', '--depth=1', '--all'],  # Fetch all branches but still with depth=1
-                    cwd=temp_dir, 
-                    check=True,
-                    capture_output=True
-                )
+                # This is the command that's likely causing timeouts
+                try:
+                    subprocess.run(
+                        ['git', 'fetch', '--depth=1', '--all'],  # Fetch all branches but still with depth=1
+                        cwd=temp_dir, 
+                        check=True,
+                        capture_output=True,
+                        timeout=timeout  # Add timeout
+                    )
+                except subprocess.TimeoutExpired:
+                    logger.warning(f"Timeout fetching all branches. Repository might be too large. Continuing with limited branch information.")
+                    # We'll continue with just the main branch
                 
                 # Log branch info for debugging
                 result = subprocess.run(
@@ -303,7 +332,8 @@ def download_github_repo(url, branch='main', fetch_all_branches=True):
                     cwd=temp_dir,
                     check=True,
                     text=True,
-                    capture_output=True
+                    capture_output=True,
+                    timeout=5  # Short timeout for branch listing
                 )
                 if result.stdout:
                     logger.info(f"Available branches after fetch: {result.stdout}")
