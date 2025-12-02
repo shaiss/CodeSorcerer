@@ -1,5 +1,11 @@
 # Code Sorcerer
 
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![AI Powered](https://img.shields.io/badge/AI-GPT--4.1-green.svg)](https://openai.com/)
+[![NEAR Protocol](https://img.shields.io/badge/NEAR-Protocol-00D4FF.svg)](https://near.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A robust code auditing and analysis tool that leverages AI to evaluate software projects across multiple dimensions.
 
 ## 🎯 Features
